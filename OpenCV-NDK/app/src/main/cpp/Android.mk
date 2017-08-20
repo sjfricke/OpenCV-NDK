@@ -9,6 +9,7 @@ include /home/fricke/OpenCV-android-sdk/sdk/native/jni/OpenCV.mk
 LOCAL_MODULE    := libopencv_ndk
 LOCAL_CFLAGS    := -Werror -std=c++11
 LOCAL_SRC_FILES := native-lib.cpp \
-                   CV_Main.cpp
-LOCAL_LDLIBS    := -llog -landroid
+                   CV_Main.cpp \
+                   Image_Reader.cpp
+LOCAL_LDLIBS    := -llog -landroid -lcamera2ndk -lmediandk
 include $(BUILD_SHARED_LIBRARY)

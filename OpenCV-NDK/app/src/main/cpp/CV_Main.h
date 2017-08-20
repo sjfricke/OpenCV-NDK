@@ -2,13 +2,17 @@
 #define OPENCV_NDK_CV_MAIN_H
 
 // Android
-#include <android/log.h>
 #include <android/native_window.h>
 #include <android/asset_manager.h>
+#include <camera/NdkCameraDevice.h>
+#include <camera/NdkCameraManager.h>
 #include <jni.h>
 // OpenCV
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
+// OpenCV-NDK App
+#include "Util.h"
+#include "Image_Reader.h"
 //C Libs
 #include <unistd.h>
 //STD Libs
@@ -17,12 +21,18 @@
 #include <cstdlib>
 
 
-// used to get logcat outputs which can be regex filtered by the LOG_TAG we give
-// So in Logcat you can filter this example by putting OpenCV-NDK
-#define LOG_TAG "OpenCV-NDK-Native"
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
-
+static void CameraDeviceOnDisconnected(void *context, ACameraDevice *device) {
+    LOGI("Camera(id: %s) is diconnected.\n", ACameraDevice_getId(device));
+}
+static void CameraDeviceOnError(void *context, ACameraDevice *device, int error) {
+    LOGE("Error(code: %d) on Camera(id: %s).\n", error, ACameraDevice_getId(device));
+}
+static void CaptureSessionOnReady(void *context, ACameraCaptureSession *session) {
+    LOGI("Session is ready.\n");
+}
+static void CaptureSessionOnActive(void *context, ACameraCaptureSession *session) {
+    LOGI("Session is activated.\n");
+}
 
 class CV_Main {
     public:
@@ -49,7 +59,14 @@ class CV_Main {
     // sets Surface buffer reference pointer
     void SetAssetManager(AAssetManager* asset_manager) { m_aasset_manager = asset_manager; };
 
+    void SetUpCamera();
+
+    bool MatchCaptureSizeRequest(ImageFormat* resView);
+
+    void CameraLoop();
+
     void RunCV();
+
 private:
 
     // Cached Java VM, caller activity object
@@ -63,11 +80,22 @@ private:
     // buffer to hold native window when writing to it
     ANativeWindow_Buffer m_native_buffer;
 
-    // the buffer we will write to send to native window
-    int32_t* m_frame_buffer;
-    int32_t m_frame_height;
-    int32_t m_frame_width;
-    int32_t m_frame_stride;
+    ACameraDevice* m_camera_device;
+    ACaptureRequest* m_capture_request;
+    ACameraOutputTarget* m_camera_output_target;
+    ACaptureSessionOutput* m_session_output;
+    ACaptureSessionOutputContainer* m_capture_session_output_container;
+    ACameraCaptureSession* m_capture_session;
+
+    ACameraDevice_StateCallbacks m_device_state_callbacks;
+    ACameraCaptureSession_stateCallbacks m_capture_session_state_callbacks;
+
+    ACameraManager* m_camera_manager;
+    uint32_t m_camera_orientation;
+    const char* m_selected_camera_ID = NULL;
+
+    ImageFormat m_view{0, 0, 0};
+    Image_Reader* m_image_reader;
 
     // used to hold reference to assets in assets folder
     AAssetManager* m_aasset_manager;

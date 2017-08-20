@@ -34,6 +34,9 @@ Java_com_spencerfricke_opencv_1ndk_MainActivity_setSurface(JNIEnv *env, jclass c
 {
     // obtain a native window from a Java surface
     app.SetNativeWindow( ANativeWindow_fromSurface(env, surface) );
+
+    // Set camera parameters up
+    app.SetUpCamera();
 }
 
 

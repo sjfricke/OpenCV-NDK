@@ -33,14 +33,14 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Asking for permissions
         String[] accessPermissions = new String[] {
-                Manifest.permission.CAMERA,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                Manifest.permission.CAMERA
         };
         boolean needRequire = false;
         for(String access : accessPermissions) {
             int curPermission = ActivityCompat.checkSelfPermission(this, access);
-            if(curPermission != PackageManager.PERMISSION_GRANTED) {
+            if (curPermission != PackageManager.PERMISSION_GRANTED) {
                 needRequire = true;
                 break;
             }
