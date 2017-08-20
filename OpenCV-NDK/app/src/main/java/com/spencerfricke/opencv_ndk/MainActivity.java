@@ -1,8 +1,12 @@
 package com.spencerfricke.opencv_ndk;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -10,13 +14,15 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 
-public class MainActivity extends Activity {
+public class MainActivity extends ActionBarActivity {
 
     static {
         System.loadLibrary("opencv_ndk");
     }
 
     static final String TAG = "OpenCV-NDK-Java";
+
+    private static final int PERMISSION_REQUEST_CODE_CAMERA = 1;
 
     Button mStartTestButton;
     SurfaceView mSurfaceView;
@@ -26,6 +32,26 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        String[] accessPermissions = new String[] {
+                Manifest.permission.CAMERA,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        };
+        boolean needRequire = false;
+        for(String access : accessPermissions) {
+            int curPermission = ActivityCompat.checkSelfPermission(this, access);
+            if(curPermission != PackageManager.PERMISSION_GRANTED) {
+                needRequire = true;
+                break;
+            }
+        }
+        if (needRequire) {
+            ActivityCompat.requestPermissions(
+                    this,
+                    accessPermissions,
+                    PERMISSION_REQUEST_CODE_CAMERA);
+            return;
+        }
 
         // send class activity and assest fd to native code
         onCreateJNI(this, getAssets());
