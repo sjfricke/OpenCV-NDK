@@ -2,8 +2,13 @@ LOCAL_PATH := $(call my-dir)
 PROJECT_ROOT:= $(call my-dir)/../../../../..
 
 include $(CLEAR_VARS)
+
+OPENCV_INSTALL_MODULES:=on
+include /home/fricke/OpenCV-android-sdk/sdk/native/jni/OpenCV.mk
+
 LOCAL_MODULE    := libopencv_ndk
 LOCAL_CFLAGS    := -Werror -std=c++11
-LOCAL_SRC_FILES := native-lib.cpp
-LOCAL_LDLIBS    := -llog
+LOCAL_SRC_FILES := native-lib.cpp \
+                   CV_Main.cpp
+LOCAL_LDLIBS    := -llog -landroid
 include $(BUILD_SHARED_LIBRARY)
