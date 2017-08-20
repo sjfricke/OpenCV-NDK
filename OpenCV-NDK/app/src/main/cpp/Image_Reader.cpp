@@ -179,7 +179,6 @@ bool Image_Reader::DisplayImage(ANativeWindow_Buffer *buf, AImage *img) {
            buf->format == WINDOW_FORMAT_RGBA_8888,
            "Not supported buffer format");
 
-    LOGI(" == == 31");
     switch (presentRotation_) {
         case 0:
             PresentImage(buf, img);

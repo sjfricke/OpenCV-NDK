@@ -97,6 +97,9 @@ private:
     ImageFormat m_view{0, 0, 0};
     Image_Reader* m_image_reader;
 
+    volatile bool m_camera_ready;
+    volatile bool m_found_dim;
+
     // used to hold reference to assets in assets folder
     AAssetManager* m_aasset_manager;
 

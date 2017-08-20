@@ -2,6 +2,7 @@
 #include <android/native_window_jni.h>
 #include <android/asset_manager_jni.h>
 #include "CV_Main.h"
+#include <thread>
 
 static CV_Main app;
 
@@ -37,6 +38,12 @@ Java_com_spencerfricke_opencv_1ndk_MainActivity_setSurface(JNIEnv *env, jclass c
 
     // Set camera parameters up
     app.SetUpCamera();
+
+    std::thread loopThread(&CV_Main::CameraLoop, &app);
+    loopThread.detach();
+    //while (1) {
+//        app.CameraLoop();
+   // }
 }
 
 

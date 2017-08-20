@@ -1,6 +1,9 @@
 #include "CV_Main.h"
 
 CV_Main::CV_Main()
+    : m_camera_ready(false)
+    , m_found_dim(false)
+    , m_image_reader(nullptr)
 {
 };
 
@@ -78,18 +81,6 @@ void CV_Main::SetNativeWindow(ANativeWindow* native_window)
 {
     // Save native window
     m_native_window = native_window;
-
-//    // Here we set the buffer to use RGBA_8888 as default might be; RGB_565
-//    if (ANativeWindow_lock(m_native_window, &m_native_buffer, NULL) == 0) {
-//        ANativeWindow_setBuffersGeometry(m_native_window, m_native_buffer.width, m_native_buffer.height, WINDOW_FORMAT_RGBA_8888);
-//
-//        // save buffer info while initializing as well
-//        m_frame_height = m_native_buffer.height;
-//        m_frame_width = m_native_buffer.width;
-//        m_frame_stride = m_native_buffer.stride;
-//
-//        ANativeWindow_unlockAndPost(m_native_window);
-//    }
 }
 
 void CV_Main::SetUpCamera()
@@ -116,21 +107,29 @@ void CV_Main::SetUpCamera()
             m_camera_manager, m_selected_camera_ID, &m_device_state_callbacks, &m_camera_device);
     ASSERT(cameraStatus == ACAMERA_OK, "Failed to open camera device (id: %s)", m_selected_camera_ID);
 
+    LOGI("TEST W: %d --- H: %d", ANativeWindow_getWidth(m_native_window), ANativeWindow_getHeight(m_native_window));
+
+//    m_view.height = 1920;
+//    m_view.width = 1080;
+//    m_view.format = AIMAGE_FORMAT_YUV_420_888;
+    m_camera_orientation = 90;
     MatchCaptureSizeRequest(&m_view);
 
     ASSERT(m_view.width && m_view.height, "Could not find supportable resolution");
 
       // Here we set the buffer to use RGBA_8888 as default might be; RGB_565
-    ANativeWindow_setBuffersGeometry(m_native_window, m_view.width, m_view.height, WINDOW_FORMAT_RGBA_8888);
+    ANativeWindow_setBuffersGeometry(m_native_window, m_view.height, m_view.width, WINDOW_FORMAT_RGBA_8888);
 
     m_image_reader = new Image_Reader(&m_view, AIMAGE_FORMAT_YUV_420_888);
-    m_image_reader->SetPresentRotation(0);
+    m_image_reader->SetPresentRotation(m_camera_orientation);
+
+    ANativeWindow* image_reader_window = m_image_reader->GetNativeWindow();
 
     ACaptureSessionOutputContainer_create(&m_capture_session_output_container);
-    ANativeWindow_acquire(m_native_window);
-    ACaptureSessionOutput_create(m_native_window, &m_session_output);
+    ANativeWindow_acquire(image_reader_window);
+    ACaptureSessionOutput_create(image_reader_window, &m_session_output);
     ACaptureSessionOutputContainer_add(m_capture_session_output_container, m_session_output);
-    ACameraOutputTarget_create(m_native_window, &m_camera_output_target);
+    ACameraOutputTarget_create(image_reader_window, &m_camera_output_target);
 
     // TEMPLATE_RECORD because rather have post-processing quality for more accureate CV algo
     // Frame rate should be good since all image buffers are being done from native side
@@ -144,6 +143,8 @@ void CV_Main::SetUpCamera()
     m_capture_session_state_callbacks.onActive = CaptureSessionOnActive;
     ACameraDevice_createCaptureSession(m_camera_device, m_capture_session_output_container,
                                        &m_capture_session_state_callbacks, &m_capture_session);
+
+    m_camera_ready = true;
 
     ACameraCaptureSession_setRepeatingRequest(m_capture_session, NULL, 1, &m_capture_request, NULL);
 }
@@ -168,7 +169,7 @@ bool CV_Main::MatchCaptureSizeRequest(ImageFormat* resView) {
         int32_t format = entry.data.i32[i * 4 + 0];
         if (input) continue;
 
-        if (format == AIMAGE_FORMAT_YUV_420_888 || format == AIMAGE_FORMAT_JPEG) {
+        if (format == AIMAGE_FORMAT_YUV_420_888) {
             DisplayDimension res(entry.data.i32[i * 4 + 1],
                                  entry.data.i32[i * 4 + 2]);
             if (!disp.IsSameRatio(res)) continue;
@@ -185,19 +186,39 @@ bool CV_Main::MatchCaptureSizeRequest(ImageFormat* resView) {
     } else {
         LOGE("Did not find any compatible camera resolution, taking 640x480");
         if (disp.IsPortrait()) {
-            resView->width = 480;
-            resView->height = 640;
+            resView->width = 1080;
+            resView->height = 1920;
         } else {
-            resView->width = 640;
-            resView->height = 480;
+            resView->width = 1920;
+            resView->height = 1080;
         }
     }
     resView->format = AIMAGE_FORMAT_YUV_420_888;
+    m_found_dim = true;
     return foundIt;
 }
 
 void CV_Main::CameraLoop()
 {
+    while (1) {
+        if (!m_camera_ready || !m_image_reader || !m_found_dim) continue;
+        AImage *image = m_image_reader->GetNextImage();
+        if (!image) {
+            continue;
+        }
+
+        ANativeWindow_acquire(m_native_window);
+        ANativeWindow_Buffer buf;
+        if (ANativeWindow_lock(m_native_window, &buf, nullptr) < 0) {
+            m_image_reader->DeleteImage(image);
+            continue;
+        }
+
+        m_image_reader->DisplayImage(&buf, image);
+        ANativeWindow_unlockAndPost(m_native_window);
+        ANativeWindow_release(m_native_window);
+    }
+
 }
 
 void CV_Main::RunCV()
