@@ -44,6 +44,13 @@ class Image_Reader {
     AImage* GetNextImage(void);
 
     /**
+    * Retrieve Image on the bottom of Reader's queue
+    */
+    AImage* GetLatestImage(void);
+
+    int32_t GetMaxImage(void);
+
+    /**
      * Delete Image
      * @param image {@link AImage} instance to be deleted
      */

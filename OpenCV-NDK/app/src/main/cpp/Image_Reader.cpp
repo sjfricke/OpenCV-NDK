@@ -104,6 +104,31 @@ AImage *Image_Reader::GetNextImage(void) {
 }
 
 /**
+ *   Retrieve the Last image in Image_Reader's bufferQueue, images may be skipped
+ */
+AImage *Image_Reader::GetLatestImage(void) {
+    AImage *image;
+    media_status_t status = AImageReader_acquireLatestImage(reader_, &image);
+    if (status != AMEDIA_OK) {
+        return nullptr;
+    }
+    return image;
+}
+
+/**
+ *   Shows max image buffer
+ */
+int32_t Image_Reader::GetMaxImage(void) {
+    int32_t image_count;
+    media_status_t status = AImageReader_getMaxImages(reader_, &image_count);
+    if (status != AMEDIA_OK) {
+        return -1;
+    }
+    return image_count;
+}
+
+
+/**
  * Delete Image
  * @param image {@link AImage} instance to be deleted
  */
