@@ -162,7 +162,7 @@ bool CV_Main::MatchCaptureSizeRequest(ImageFormat* resView) {
     ACameraMetadata_getConstEntry(metadata, ACAMERA_SCALER_AVAILABLE_STREAM_CONFIGURATIONS, &entry);
     // format of the data: format, width, height, input?, type int32
     bool foundIt = false;
-    DisplayDimension foundRes(4000, 4000);
+    DisplayDimension foundRes(640, 480);
 
     for (int i = 0; i < entry.count; ++i) {
         int32_t input = entry.data.i32[i * 4 + 3];
@@ -172,8 +172,13 @@ bool CV_Main::MatchCaptureSizeRequest(ImageFormat* resView) {
         if (format == AIMAGE_FORMAT_YUV_420_888) {
             DisplayDimension res(entry.data.i32[i * 4 + 1],
                                  entry.data.i32[i * 4 + 2]);
+
+            LOGE("W: %d === H: %d", entry.data.i32[i * 4 + 1], entry.data.i32[i * 4 + 2]);
             if (!disp.IsSameRatio(res)) continue;
-            if (format == AIMAGE_FORMAT_YUV_420_888 && foundRes > res) {
+
+            LOGE("W: SAME RATIO %d === H: %d", entry.data.i32[i * 4 + 1], entry.data.i32[i * 4 + 2]);
+            //if (format == AIMAGE_FORMAT_YUV_420_888 && res > foundRes) {
+            if (format == AIMAGE_FORMAT_YUV_420_888 && entry.data.i32[i * 4 + 1] == 1280 && entry.data.i32[i * 4 + 2] == 720) {
                 foundIt = true;
                 foundRes = res;
             }
@@ -183,14 +188,16 @@ bool CV_Main::MatchCaptureSizeRequest(ImageFormat* resView) {
     if (foundIt) {
         resView->width = foundRes.org_width();
         resView->height = foundRes.org_height();
+
+        LOGE("Selected: W: %d - H: %d", resView->width, resView->height);
     } else {
         LOGE("Did not find any compatible camera resolution, taking 640x480");
         if (disp.IsPortrait()) {
-            resView->width = 1080;
-            resView->height = 1920;
+            resView->width = 720;
+            resView->height = 1280;
         } else {
-            resView->width = 1920;
-            resView->height = 1080;
+            resView->width = 1280;
+            resView->height = 720;
         }
     }
     resView->format = AIMAGE_FORMAT_YUV_420_888;
@@ -202,7 +209,8 @@ void CV_Main::CameraLoop()
 {
     while (1) {
         if (!m_camera_ready || !m_image_reader || !m_found_dim) continue;
-        AImage *image = m_image_reader->GetNextImage();
+//         AImage *image = m_image_reader->GetNextImage();
+         AImage *image = m_image_reader->GetLatestImage();
         if (!image) {
             continue;
         }
@@ -223,6 +231,8 @@ void CV_Main::CameraLoop()
 
 void CV_Main::RunCV()
 {
+    LOGE("IMAGE_COUNT: %d",m_image_reader->GetMaxImage());
+
     int w = 400;
 
     cv::Mat atom_image = cv::Mat::zeros( w, w, CV_8UC3 );

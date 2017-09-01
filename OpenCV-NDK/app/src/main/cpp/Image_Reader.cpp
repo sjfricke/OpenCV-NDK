@@ -21,7 +21,7 @@
  * MAX_BUF_COUNT:
  *   Max buffers in this ImageReader.
  */
-#define MAX_BUF_COUNT 4
+#define MAX_BUF_COUNT 2
 
 /**
  * ImageReader listener: called by AImageReader for every frame captured
