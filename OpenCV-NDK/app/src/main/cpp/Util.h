@@ -17,4 +17,4 @@
     __android_log_assert(#cond, LOG_TAG, fmt, ##__VA_ARGS__); \
   }
 
-#endif //OPENCV_NDK_UTIL_H
+#endif  // OPENCV_NDK_UTIL_H

@@ -2,8 +2,8 @@
 #define OPENCV_NDK_CV_MAIN_H
 
 // Android
-#include <android/native_window.h>
 #include <android/asset_manager.h>
+#include <android/native_window.h>
 #include <camera/NdkCameraDevice.h>
 #include <camera/NdkCameraManager.h>
 #include <jni.h>
@@ -11,98 +11,101 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 // OpenCV-NDK App
-#include "Util.h"
 #include "Image_Reader.h"
-//C Libs
+#include "Util.h"
+// C Libs
 #include <unistd.h>
-//STD Libs
+// STD Libs
+#include <cstdlib>
 #include <string>
 #include <vector>
-#include <cstdlib>
 
-
-static void CameraDeviceOnDisconnected(void *context, ACameraDevice *device) {
-    LOGI("Camera(id: %s) is diconnected.\n", ACameraDevice_getId(device));
+static void CameraDeviceOnDisconnected(void* context, ACameraDevice* device) {
+  LOGI("Camera(id: %s) is diconnected.\n", ACameraDevice_getId(device));
 }
-static void CameraDeviceOnError(void *context, ACameraDevice *device, int error) {
-    LOGE("Error(code: %d) on Camera(id: %s).\n", error, ACameraDevice_getId(device));
+static void CameraDeviceOnError(void* context, ACameraDevice* device,
+                                int error) {
+  LOGE("Error(code: %d) on Camera(id: %s).\n", error,
+       ACameraDevice_getId(device));
 }
-static void CaptureSessionOnReady(void *context, ACameraCaptureSession *session) {
-    LOGI("Session is ready.\n");
+static void CaptureSessionOnReady(void* context,
+                                  ACameraCaptureSession* session) {
+  LOGI("Session is ready.\n");
 }
-static void CaptureSessionOnActive(void *context, ACameraCaptureSession *session) {
-    LOGI("Session is activated.\n");
+static void CaptureSessionOnActive(void* context,
+                                   ACameraCaptureSession* session) {
+  LOGI("Session is activated.\n");
 }
 
 class CV_Main {
-    public:
-    CV_Main();
-    ~CV_Main();
-    CV_Main(const CV_Main& other) = delete;
-    CV_Main& operator=(const CV_Main& other) = delete;
+ public:
+  CV_Main();
+  ~CV_Main();
+  CV_Main(const CV_Main& other) = delete;
+  CV_Main& operator=(const CV_Main& other) = delete;
 
-    // Lets us know when app has started passing in VM info
-    void OnCreate(JNIEnv* env, jobject caller_activity);
+  // Lets us know when app has started passing in VM info
+  void OnCreate(JNIEnv* env, jobject caller_activity);
 
-    // Disconnect from service
-    void OnPause();
+  // Disconnect from service
+  void OnPause();
 
-    // Cleanup
-    void OnDestroy();
+  // Cleanup
+  void OnDestroy();
 
-    // Cache the Java VM used from the Java layer.
-    void SetJavaVM(JavaVM* pjava_vm) { java_vm = pjava_vm; }
+  // Cache the Java VM used from the Java layer.
+  void SetJavaVM(JavaVM* pjava_vm) { java_vm = pjava_vm; }
 
-    // sets Surface buffer reference pointer
-    void SetNativeWindow(ANativeWindow* native_indow);
+  // sets Surface buffer reference pointer
+  void SetNativeWindow(ANativeWindow* native_indow);
 
-    // sets Surface buffer reference pointer
-    void SetAssetManager(AAssetManager* asset_manager) { m_aasset_manager = asset_manager; };
+  // sets Surface buffer reference pointer
+  void SetAssetManager(AAssetManager* asset_manager) {
+    m_aasset_manager = asset_manager;
+  };
 
-    void SetUpCamera();
+  void SetUpCamera();
 
-    bool MatchCaptureSizeRequest(ImageFormat* resView);
+  bool MatchCaptureSizeRequest(ImageFormat* resView);
 
-    void CameraLoop();
+  void CameraLoop();
 
-    void RunCV();
+  void RunCV();
 
-private:
+ private:
+  // Cached Java VM, caller activity object
+  JavaVM* java_vm;
+  jobject calling_activity_obj;
+  jmethodID on_callback;
 
-    // Cached Java VM, caller activity object
-    JavaVM* java_vm;
-    jobject calling_activity_obj;
-    jmethodID on_callback;
+  // holds native window to write buffer too
+  ANativeWindow* m_native_window;
 
-    // holds native window to write buffer too
-    ANativeWindow* m_native_window;
+  // buffer to hold native window when writing to it
+  ANativeWindow_Buffer m_native_buffer;
 
-    // buffer to hold native window when writing to it
-    ANativeWindow_Buffer m_native_buffer;
+  ACameraDevice* m_camera_device;
+  ACaptureRequest* m_capture_request;
+  ACameraOutputTarget* m_camera_output_target;
+  ACaptureSessionOutput* m_session_output;
+  ACaptureSessionOutputContainer* m_capture_session_output_container;
+  ACameraCaptureSession* m_capture_session;
 
-    ACameraDevice* m_camera_device;
-    ACaptureRequest* m_capture_request;
-    ACameraOutputTarget* m_camera_output_target;
-    ACaptureSessionOutput* m_session_output;
-    ACaptureSessionOutputContainer* m_capture_session_output_container;
-    ACameraCaptureSession* m_capture_session;
+  ACameraDevice_StateCallbacks m_device_state_callbacks;
+  ACameraCaptureSession_stateCallbacks m_capture_session_state_callbacks;
 
-    ACameraDevice_StateCallbacks m_device_state_callbacks;
-    ACameraCaptureSession_stateCallbacks m_capture_session_state_callbacks;
+  ACameraManager* m_camera_manager;
+  uint32_t m_camera_orientation;
+  const char* m_selected_camera_ID = NULL;
 
-    ACameraManager* m_camera_manager;
-    uint32_t m_camera_orientation;
-    const char* m_selected_camera_ID = NULL;
+  ImageFormat m_view{0, 0, 0};
+  Image_Reader* m_image_reader;
 
-    ImageFormat m_view{0, 0, 0};
-    Image_Reader* m_image_reader;
+  volatile bool m_camera_ready;
+  volatile bool m_found_dim;
 
-    volatile bool m_camera_ready;
-    volatile bool m_found_dim;
-
-    // used to hold reference to assets in assets folder
-    AAssetManager* m_aasset_manager;
-
+  // used to hold reference to assets in assets folder
+  AAssetManager* m_aasset_manager;
 };
 
-#endif //OPENCV_NDK_CV_MAIN_H
+#endif  // OPENCV_NDK_CV_MAIN_H
