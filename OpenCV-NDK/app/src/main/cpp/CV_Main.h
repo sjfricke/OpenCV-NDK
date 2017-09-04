@@ -106,6 +106,9 @@ class CV_Main {
 
   // used to hold reference to assets in assets folder
   AAssetManager* m_aasset_manager;
+
+  int32_t  backup_width = 480;
+  int32_t  backup_height = 720;
 };
 
 #endif  // OPENCV_NDK_CV_MAIN_H

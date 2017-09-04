@@ -17,6 +17,7 @@
 #ifndef OPENCV_NDK_IMAGE_READER_H
 #define OPENCV_NDK_IMAGE_READER_H
 #include <media/NdkImageReader.h>
+#include <opencv2/core.hpp>
 
 // A Data Structure to communicate resolution between camera and ImageReader
 struct ImageFormat {
@@ -70,11 +71,11 @@ class Image_Reader {
    *      WINDOW_FORMAT_RGBX_8888
    *      WINDOW_FORMAT_RGBA_8888
    *   @param buf {@link ANativeWindow_Buffer} for image to display to.
-   *   @param img a {@link AImage} instance, source of image conversion.
+   *   @param image a {@link AImage} instance, source of image conversion.
    *            it will be deleted via {@link AImage_delete}
    *   @return true on success, false on failure
    */
-  bool DisplayImage(ANativeWindow_Buffer* buf, AImage* img);
+  bool DisplayImage(ANativeWindow_Buffer* buf, AImage* image);
 
   /**
    * Configure the rotation angle necessary to apply to
@@ -88,10 +89,10 @@ class Image_Reader {
   int32_t presentRotation_;
   AImageReader* reader_;
 
-  void PresentImage(ANativeWindow_Buffer* buf, AImage* img);
-  void PresentImage90(ANativeWindow_Buffer* buf, AImage* img);
-  void PresentImage180(ANativeWindow_Buffer* buf, AImage* img);
-  void PresentImage270(ANativeWindow_Buffer* buf, AImage* img);
+  void PresentImage(ANativeWindow_Buffer* buf, AImage* image);
+  void PresentImage90(ANativeWindow_Buffer* buf, AImage* image);
+  void PresentImage180(ANativeWindow_Buffer* buf, AImage* image);
+  void PresentImage270(ANativeWindow_Buffer* buf, AImage* image);
 };
 
 /**

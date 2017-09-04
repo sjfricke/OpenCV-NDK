@@ -203,13 +203,13 @@ bool CV_Main::MatchCaptureSizeRequest(ImageFormat* resView) {
 
     LOGE("Selected: W: %d - H: %d", resView->width, resView->height);
   } else {
-    LOGE("Did not find any compatible camera resolution, taking 640x480");
+    LOGE("Did not find any compatible camera resolution");
     if (disp.IsPortrait()) {
-      resView->width = 720;
-      resView->height = 1280;
+      resView->width = backup_width;
+      resView->height = backup_height;
     } else {
-      resView->width = 1280;
-      resView->height = 720;
+      resView->width = backup_height ;
+      resView->height = backup_width;
     }
   }
   resView->format = AIMAGE_FORMAT_YUV_420_888;
@@ -240,7 +240,6 @@ void CV_Main::CameraLoop() {
 }
 
 void CV_Main::RunCV() {
-  LOGE("IMAGE_COUNT: %d", m_image_reader->GetMaxImage());
 
   int w = 400;
 
