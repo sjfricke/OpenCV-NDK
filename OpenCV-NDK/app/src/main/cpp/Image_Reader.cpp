@@ -15,6 +15,7 @@
  */
 #include "Image_Reader.h"
 #include <string>
+#include <opencv2/imgproc.hpp>
 #include "Util.h"
 
 /**
@@ -41,7 +42,10 @@ void OnImageCallback(void *ctx, AImageReader *reader) {
  * Constructor
  */
 Image_Reader::Image_Reader(ImageFormat *res, enum AIMAGE_FORMATS format)
-    : reader_(nullptr), presentRotation_(0) {
+    : reader_(nullptr),
+      presentRotation_(0),
+      imageHeight_(res->height),
+      imageWidth_(res->width) {
   media_status_t status = AImageReader_new(res->width, res->height, format,
                                            MAX_BUF_COUNT, &reader_);
   ASSERT(reader_ && status == AMEDIA_OK, "Failed to create AImageReader");
@@ -50,11 +54,28 @@ Image_Reader::Image_Reader(ImageFormat *res, enum AIMAGE_FORMATS format)
       .context = this, .onImageAvailable = OnImageCallback,
   };
   AImageReader_setImageListener(reader_, &listener);
+
+  // assuming 4 bit per pixel max
+  LOGI("Image Buffer Size: %d", res->width * res->height * 4);
+  imageBuffer_ = (uint8_t*)malloc(res->width * res->height * 4);
+  ASSERT(imageBuffer_ != nullptr, "Failed to allocate imageBuffer_");
+
+
+//  temp = malloc(1080 * 1920 * 4);
+//  ASSERT(temp != nullptr, "Failed to allocate temp");
 }
 
 Image_Reader::~Image_Reader() {
   ASSERT(reader_, "NULL Pointer to %s", __FUNCTION__);
   AImageReader_delete(reader_);
+
+  if (imageBuffer_ != nullptr) {
+    free(imageBuffer_);
+  }
+
+//  if (temp != nullptr) {
+//    free(temp);
+//  }
 }
 
 void Image_Reader::ImageCallback(AImageReader *reader) {
@@ -200,7 +221,7 @@ static inline uint32_t YUV2RGB(int nY, int nU, int nV) {
  * @param image a {@link AImage} instance, source of image conversion.
  *            it will be deleted via {@link AImage_delete}
  */
-bool Image_Reader::DisplayImage(ANativeWindow_Buffer *buf, AImage *image) {
+bool Image_Reader::DisplayImage(ANativeWindow_Buffer *buf, AImage *image, void* temp) {
   ASSERT(buf->format == WINDOW_FORMAT_RGBX_8888 ||
       buf->format == WINDOW_FORMAT_RGBA_8888,
          "Not supported buffer format");
@@ -217,7 +238,7 @@ bool Image_Reader::DisplayImage(ANativeWindow_Buffer *buf, AImage *image) {
       PresentImage(buf, image);
       break;
     case 90:
-      PresentImage90(buf, image);
+      PresentImage90(buf, image, temp);
       break;
     case 180:
       PresentImage180(buf, image);
@@ -260,6 +281,7 @@ void Image_Reader::PresentImage(ANativeWindow_Buffer *buf, AImage *image) {
   int32_t width = MIN(buf->width, (srcRect.right - srcRect.left));
 
   uint32_t *out = static_cast<uint32_t *>(buf->bits);
+
   for (int32_t y = 0; y < height; y++) {
     const uint8_t *pY = yPixel + yStride * (y + srcRect.top) + srcRect.left;
 
@@ -280,7 +302,7 @@ void Image_Reader::PresentImage(ANativeWindow_Buffer *buf, AImage *image) {
  *   Converting YUV to RGB
  *   Rotation image anti-clockwise 90 degree -- (x, y) --> (-y, x)
  */
-void Image_Reader::PresentImage90(ANativeWindow_Buffer *buf, AImage *image) {
+void Image_Reader::PresentImage90(ANativeWindow_Buffer *buf, AImage *image, void* temp) {
   AImageCropRect srcRect;
   AImage_getCropRect(image, &srcRect);
 
@@ -289,16 +311,24 @@ void Image_Reader::PresentImage90(ANativeWindow_Buffer *buf, AImage *image) {
   int32_t yLen, uLen, vLen;
   AImage_getPlaneRowStride(image, 0, &yStride);
   AImage_getPlaneRowStride(image, 1, &uvStride);
+  yPixel = imageBuffer_;
   AImage_getPlaneData(image, 0, &yPixel, &yLen);
+  vPixel = imageBuffer_ + yLen;
   AImage_getPlaneData(image, 1, &vPixel, &vLen);
+  uPixel = imageBuffer_ + yLen + vLen;
   AImage_getPlaneData(image, 2, &uPixel, &uLen);
   int32_t uvPixelStride;
   AImage_getPlanePixelStride(image, 1, &uvPixelStride);
 
+//  cv::Mat inputMat = cv::Mat(imageHeight_, imageWidth_, CV_8UC3, imageBuffer_);
+//  cv::Mat outputMat = cv::Mat(buf->height, buf->width, CV_8UC4, buf->bits);
+//  cv::cvtColor(inputMat, outputMat, CV_YUV2RGB_NV21);
+
   int32_t height = MIN(buf->width, (srcRect.bottom - srcRect.top));
   int32_t width = MIN(buf->height, (srcRect.right - srcRect.left));
 
-  uint32_t *out = static_cast<uint32_t *>(buf->bits);
+//  uint32_t *out = static_cast<uint32_t *>(buf->bits);
+  uint32_t *out = static_cast<uint32_t *>(temp);
   out += height - 1;
   for (int32_t y = 0; y < height; y++) {
     const uint8_t *pY = yPixel + yStride * (y + srcRect.top) + srcRect.left;

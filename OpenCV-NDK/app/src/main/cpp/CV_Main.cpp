@@ -1,7 +1,10 @@
 #include "CV_Main.h"
 
 CV_Main::CV_Main()
-    : m_camera_ready(false), m_found_dim(false), m_image_reader(nullptr){};
+    : m_camera_ready(false), m_found_dim(false), m_image_reader(nullptr){
+  temp = malloc(1080 * 1920 * 4);
+  ASSERT(temp != nullptr, "Failed to allocate temp");
+};
 
 CV_Main::~CV_Main() {
   // clean up VM and callback handles
@@ -50,6 +53,10 @@ CV_Main::~CV_Main() {
   if (m_image_reader != NULL) {
     delete (m_image_reader);
     m_image_reader = NULL;
+  }
+
+  if (temp != nullptr) {
+    free(temp);
   }
 }
 
@@ -218,6 +225,7 @@ bool CV_Main::MatchCaptureSizeRequest(ImageFormat* resView) {
 }
 
 void CV_Main::CameraLoop() {
+  bool test = false;
   while (1) {
     if (!m_camera_ready || !m_image_reader || !m_found_dim) continue;
     //         AImage *image = m_image_reader->GetNextImage();
@@ -233,7 +241,16 @@ void CV_Main::CameraLoop() {
       continue;
     }
 
-    m_image_reader->DisplayImage(&buf, image);
+    if (false == test) { test = true;
+      LOGI("========= H-W-S-F: %d, %d, %d, %d", buf.height, buf.width, buf.stride, buf.format);
+    }
+
+    m_image_reader->DisplayImage(&buf, image, temp);
+
+    tempMat = cv::Mat(buf.height, buf.stride, CV_8UC4, temp);
+    bufMat = cv::Mat(buf.height, buf.stride, CV_8UC4, buf.bits);
+    cv::cvtColor(tempMat, bufMat, CV_RGBA2BGRA);
+
     ANativeWindow_unlockAndPost(m_native_window);
     ANativeWindow_release(m_native_window);
   }

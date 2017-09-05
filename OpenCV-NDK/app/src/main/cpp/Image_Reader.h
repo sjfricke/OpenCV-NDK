@@ -75,7 +75,7 @@ class Image_Reader {
    *            it will be deleted via {@link AImage_delete}
    *   @return true on success, false on failure
    */
-  bool DisplayImage(ANativeWindow_Buffer* buf, AImage* image);
+  bool DisplayImage(ANativeWindow_Buffer* buf, AImage* image, void* temp);
 
   /**
    * Configure the rotation angle necessary to apply to
@@ -90,9 +90,15 @@ class Image_Reader {
   AImageReader* reader_;
 
   void PresentImage(ANativeWindow_Buffer* buf, AImage* image);
-  void PresentImage90(ANativeWindow_Buffer* buf, AImage* image);
+  void PresentImage90(ANativeWindow_Buffer* buf, AImage* image, void* temp);
   void PresentImage180(ANativeWindow_Buffer* buf, AImage* image);
   void PresentImage270(ANativeWindow_Buffer* buf, AImage* image);
+
+  int32_t imageHeight_;
+  int32_t imageWidth_;
+
+  uint8_t* imageBuffer_;
+//  void* temp;
 };
 
 /**
@@ -152,6 +158,7 @@ class DisplayDimension {
  private:
   int32_t w_, h_;
   bool portrait_;
+
 };
 
 #endif  // OPENCV_NDK_IMAGE_READER_H

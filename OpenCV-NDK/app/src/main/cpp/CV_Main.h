@@ -109,6 +109,10 @@ class CV_Main {
 
   int32_t  backup_width = 480;
   int32_t  backup_height = 720;
+
+  void* temp;
+  cv::Mat tempMat;
+  cv::Mat bufMat;
 };
 
 #endif  // OPENCV_NDK_CV_MAIN_H
