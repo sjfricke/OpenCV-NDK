@@ -10,6 +10,8 @@
 // OpenCV
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/objdetect.hpp>
+#include <opencv2/features2d.hpp>
 // OpenCV-NDK App
 #include "Image_Reader.h"
 #include "Util.h"
@@ -113,6 +115,10 @@ class CV_Main {
   void* temp;
   cv::Mat tempMat;
   cv::Mat bufMat;
+  cv::String face_cascade_name = "haarcascade_frontalface_alt.xml";
+  cv::String eyes_cascade_name = "haarcascade_eye_tree_eyeglasses.xml";
+  cv::CascadeClassifier face_cascade;
+  cv::CascadeClassifier eyes_cascade;
 };
 
 #endif  // OPENCV_NDK_CV_MAIN_H

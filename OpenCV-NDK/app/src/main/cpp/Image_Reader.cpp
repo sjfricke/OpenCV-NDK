@@ -320,15 +320,16 @@ void Image_Reader::PresentImage90(ANativeWindow_Buffer *buf, AImage *image, void
   int32_t uvPixelStride;
   AImage_getPlanePixelStride(image, 1, &uvPixelStride);
 
-//  cv::Mat inputMat = cv::Mat(imageHeight_, imageWidth_, CV_8UC3, imageBuffer_);
-//  cv::Mat outputMat = cv::Mat(buf->height, buf->width, CV_8UC4, buf->bits);
-//  cv::cvtColor(inputMat, outputMat, CV_YUV2RGB_NV21);
+//  memcpy(temp, imageBuffer_, yLen + uLen + vLen);
+//  cv::Mat inputMat = cv::Mat(imageHeight_, imageWidth_, CV_8UC1, imageBuffer_);
+//  cv::Mat outputMat = cv::Mat(buf->height, buf->stride, CV_8UC4, buf->bits);
+//  cv::cvtColor(inputMat, outputMat, CV_YUV2RGBA_NV21);
 
   int32_t height = MIN(buf->width, (srcRect.bottom - srcRect.top));
   int32_t width = MIN(buf->height, (srcRect.right - srcRect.left));
 
-//  uint32_t *out = static_cast<uint32_t *>(buf->bits);
-  uint32_t *out = static_cast<uint32_t *>(temp);
+  uint32_t *out = static_cast<uint32_t *>(buf->bits);
+//  uint32_t *out = static_cast<uint32_t *>(temp);
   out += height - 1;
   for (int32_t y = 0; y < height; y++) {
     const uint8_t *pY = yPixel + yStride * (y + srcRect.top) + srcRect.left;

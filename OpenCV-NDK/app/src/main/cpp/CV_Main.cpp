@@ -4,6 +4,9 @@ CV_Main::CV_Main()
     : m_camera_ready(false), m_found_dim(false), m_image_reader(nullptr){
   temp = malloc(1080 * 1920 * 4);
   ASSERT(temp != nullptr, "Failed to allocate temp");
+
+  if( !face_cascade.load( face_cascade_name ) ){ LOGE("--(!)Error loading face cascade\n"); };
+  if( !eyes_cascade.load( eyes_cascade_name ) ){ LOGE("--(!)Error loading eyes cascade\n"); };
 };
 
 CV_Main::~CV_Main() {
@@ -124,7 +127,7 @@ void CV_Main::SetUpCamera() {
 
   // Here we set the buffer to use RGBA_8888 as default might be; RGB_565
   ANativeWindow_setBuffersGeometry(m_native_window, m_view.height, m_view.width,
-                                   WINDOW_FORMAT_RGBA_8888);
+                                   WINDOW_FORMAT_RGBX_8888);
 
   m_image_reader = new Image_Reader(&m_view, AIMAGE_FORMAT_YUV_420_888);
   m_image_reader->SetPresentRotation(m_camera_orientation);
@@ -246,10 +249,51 @@ void CV_Main::CameraLoop() {
     }
 
     m_image_reader->DisplayImage(&buf, image, temp);
+   // memcpy(buf.bits, temp, buf.height * buf.stride * 4);
+//
+//    tempMat = cv::Mat(buf.height, buf.stride, CV_8UC3, temp);
+//  cv::Mat outputMat = cv::Mat(buf->height, buf->width, CV_8UC4, buf->bits);
+    tempMat = cv::Mat(buf.height, buf.stride, CV_8UC4, buf.bits);
 
-    tempMat = cv::Mat(buf.height, buf.stride, CV_8UC4, temp);
-    bufMat = cv::Mat(buf.height, buf.stride, CV_8UC4, buf.bits);
-    cv::cvtColor(tempMat, bufMat, CV_RGBA2BGRA);
+    cv::Mat frame_gray;
+    cv::cvtColor( tempMat, frame_gray, cv::COLOR_RGBA2GRAY );
+    std::vector<cv::KeyPoint> v;
+
+    cv::Ptr<cv::FeatureDetector> detector = cv::FastFeatureDetector::create(50);
+    detector->detect(frame_gray, v);
+    for (unsigned int i = 0; i < v.size(); i++) {
+      const cv::KeyPoint& kp = v[i];
+      cv::circle(tempMat, cv::Point(kp.pt.x, kp.pt.y), 10, cv::Scalar(255,0,0,255));
+    }
+
+
+
+//    std::vector<cv::Rect> faces;
+//    cv::Mat frame_gray;
+//    cv::cvtColor( tempMat, frame_gray, cv::COLOR_RGBA2GRAY );
+//    equalizeHist( frame_gray, frame_gray );
+//    //-- Detect faces
+//    face_cascade.detectMultiScale( frame_gray, faces, 1.1, 2, 0|cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30) );
+//    for ( size_t i = 0; i < faces.size(); i++ )
+//    {
+//      cv::Point center( faces[i].x + faces[i].width/2, faces[i].y + faces[i].height/2 );
+//      ellipse( tempMat, center, cv::Size( faces[i].width/2, faces[i].height/2 ), 0, 0, 360, cv::Scalar( 255, 0, 255 ), 4, 8, 0 );
+//      cv::Mat faceROI = frame_gray( faces[i] );
+//      std::vector<cv::Rect> eyes;
+//      //-- In each face, detect eyes
+//      eyes_cascade.detectMultiScale( faceROI, eyes, 1.1, 2, 0 |cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30) );
+//      for ( size_t j = 0; j < eyes.size(); j++ )
+//      {
+//        cv::Point eye_center( faces[i].x + eyes[j].x + eyes[j].width/2, faces[i].y + eyes[j].y + eyes[j].height/2 );
+//        int radius = cvRound( (eyes[j].width + eyes[j].height)*0.25 );
+//        cv::circle( tempMat, eye_center, radius, cv::Scalar( 255, 0, 0 ), 4, 8, 0 );
+//      }
+//    }
+
+//    bufMat = cv::Mat(buf.height, buf.stride, CV_8UC4, buf.bits);
+//    cv::cvtColor(tempMat, bufMat, CV_YUV2RGB_NV21);
+
+//    cv::cvtColor(tempMat, bufMat, CV_RGBA2BGRA);
 
     ANativeWindow_unlockAndPost(m_native_window);
     ANativeWindow_release(m_native_window);
