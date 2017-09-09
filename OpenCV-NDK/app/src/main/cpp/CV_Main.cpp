@@ -1,7 +1,7 @@
 #include "CV_Main.h"
 
 CV_Main::CV_Main()
-    : m_camera_ready(false), m_image_reader(nullptr){
+    : m_camera_ready(false), m_image_reader(nullptr), m_native_camera(nullptr){
   temp = malloc(1080 * 1920 * 4);
   ASSERT(temp != nullptr, "Failed to allocate temp");
 
@@ -20,6 +20,7 @@ CV_Main::~CV_Main() {
 
   if (m_native_camera != nullptr) {
     delete m_native_camera;
+    m_native_camera = nullptr;
   }
 
    // make sure we don't leak native windows
@@ -93,15 +94,15 @@ void CV_Main::CameraLoop() {
   while (1) {
     if (!m_camera_ready || !m_image_reader) continue;
     //         AImage *image = m_image_reader->GetNextImage();
-    AImage* image = m_image_reader->GetLatestImage();
-    if (!image) {
+    m_image = m_image_reader->GetLatestImage();
+    if (!m_image) {
       continue;
     }
 
     ANativeWindow_acquire(m_native_window);
     ANativeWindow_Buffer buf;
     if (ANativeWindow_lock(m_native_window, &buf, nullptr) < 0) {
-      m_image_reader->DeleteImage(image);
+      m_image_reader->DeleteImage(m_image);
       continue;
     }
 
@@ -109,14 +110,13 @@ void CV_Main::CameraLoop() {
       LOGI("========= H-W-S-F: %d, %d, %d, %d", buf.height, buf.width, buf.stride, buf.format);
     }
 
-    m_image_reader->DisplayImage(&buf, image, temp);
+    m_image_reader->DisplayImage(&buf, m_image, temp);
    // memcpy(buf.bits, temp, buf.height * buf.stride * 4);
 //
 //    tempMat = cv::Mat(buf.height, buf.stride, CV_8UC3, temp);
 //  cv::Mat outputMat = cv::Mat(buf->height, buf->width, CV_8UC4, buf->bits);
     tempMat = cv::Mat(buf.height, buf.stride, CV_8UC4, buf.bits);
 
-    cv::Mat frame_gray;
     cv::cvtColor( tempMat, frame_gray, cv::COLOR_RGBA2GRAY );
     std::vector<cv::KeyPoint> v;
 
@@ -174,16 +174,27 @@ void CV_Main::RunCV() {
 
 void CV_Main::FlipCamera() {
 
-//  if (m_camera_id_list == nullptr) {
-//    return; // need to setup camera
-//  } else if (m_camera_id_list->numCameras < 2) {
-//    return; // need a second camera to flip with
-//  }
-//
-//  if (m_selected_camera_type == FRONT_CAMERA) {
-//    m_selected_camera_type = BACK_CAMERA;
-//  } else {
-//    m_selected_camera_type = FRONT_CAMERA;
-//  }
+  if (m_native_camera == nullptr) {
+    LOGE("Can't flip camera without camera instance");
+    return; // need to setup camera
+  } else if (m_native_camera->GetCameraCount() < 2) {
+    LOGE("Only one camera is available"); // TODO - remove button if this is true
+    return; // need a second camera to flip with
+  }
 
+  if (m_selected_camera_type == FRONT_CAMERA) {
+    m_selected_camera_type = BACK_CAMERA;
+  } else {
+    m_selected_camera_type = FRONT_CAMERA;
+  }
+
+  // reset info
+  m_camera_ready =  false;
+  m_image_reader->DeleteImage(m_image);
+  if (m_image_reader != nullptr) {
+    delete (m_image_reader);
+  }
+  delete m_native_camera;
+
+  SetUpCamera();
 }

@@ -78,6 +78,7 @@ class CV_Main {
   // Image Reader
   ImageFormat m_view{0, 0, 0};
   Image_Reader* m_image_reader;
+  AImage* m_image;
 
   volatile bool m_camera_ready;
 
@@ -88,6 +89,7 @@ class CV_Main {
   void* temp;
   cv::Mat tempMat;
   cv::Mat bufMat;
+  cv::Mat frame_gray;
   cv::String face_cascade_name = "haarcascade_frontalface_alt.xml";
   cv::String eyes_cascade_name = "haarcascade_eye_tree_eyeglasses.xml";
   cv::CascadeClassifier face_cascade;

@@ -42,6 +42,7 @@ class Native_Camera {
 
   bool CreateCaptureSession(ANativeWindow* window);
 
+  int32_t GetCameraCount() { return m_camera_id_list->numCameras; }
   uint32_t GetOrientation() { return m_camera_orientation; };
 
  private:

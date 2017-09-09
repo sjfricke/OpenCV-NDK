@@ -403,8 +403,11 @@ void Image_Reader::PresentImage270(ANativeWindow_Buffer *buf, AImage *image) {
   int32_t yLen, uLen, vLen;
   AImage_getPlaneRowStride(image, 0, &yStride);
   AImage_getPlaneRowStride(image, 1, &uvStride);
+  yPixel = imageBuffer_;
   AImage_getPlaneData(image, 0, &yPixel, &yLen);
+  vPixel = imageBuffer_ + yLen;
   AImage_getPlaneData(image, 1, &vPixel, &vLen);
+  uPixel = imageBuffer_ + yLen + vLen;
   AImage_getPlaneData(image, 2, &uPixel, &uLen);
   int32_t uvPixelStride;
   AImage_getPlanePixelStride(image, 1, &uvPixelStride);
@@ -428,6 +431,7 @@ void Image_Reader::PresentImage270(ANativeWindow_Buffer *buf, AImage *image) {
     out += 1;  // move to the next column
   }
 }
+
 void Image_Reader::SetPresentRotation(int32_t angle) {
   presentRotation_ = angle;
 }

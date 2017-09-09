@@ -14,11 +14,14 @@ Native_Camera::Native_Camera(camera_type type) {
   ASSERT(m_camera_id_list->numCameras > 0, "No camera device detected");
 
   // ASSUMPTION: Back camera is index[0] and front is index[1]
+  // TODO - why I need orientation as is below
   if (type == BACK_CAMERA) {
     m_selected_camera_id = m_camera_id_list->cameraIds[0];
+    m_camera_orientation = 90;
   } else {
     ASSERT(m_camera_id_list->numCameras > 1, "No dual camera setup");
     m_selected_camera_id= m_camera_id_list->cameraIds[1];
+    m_camera_orientation = 270;
   }
 
   cameraStatus = ACameraManager_getCameraCharacteristics(
@@ -35,9 +38,7 @@ Native_Camera::Native_Camera(camera_type type) {
   ASSERT(cameraStatus == ACAMERA_OK, "Failed to open camera device (id: %s)",
          m_selected_camera_id);
 
-  m_camera_orientation = 90;
-
-  // TEMPLATE_RECORD because rather have post-processing quality for more
+   // TEMPLATE_RECORD because rather have post-processing quality for more
   // accureate CV algo
   // Frame rate should be good since all image buffers are being done from
   // native side
