@@ -4,7 +4,8 @@ PROJECT_ROOT:= $(call my-dir)/../../../../..
 include $(CLEAR_VARS)
 
 OPENCV_INSTALL_MODULES:=on
-include /home/fricke/OpenCV-android-sdk/sdk/native/jni/OpenCV.mk
+
+include C:\Users\SpencerFricke\Documents\OpenCV-android-sdk\sdk\native\jni\OpenCV.mk
 
 LOCAL_MODULE    := libopencv_ndk
 LOCAL_CFLAGS    := -Werror -std=c++11
