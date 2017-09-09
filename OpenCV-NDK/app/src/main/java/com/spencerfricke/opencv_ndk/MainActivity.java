@@ -24,7 +24,7 @@ public class MainActivity extends ActionBarActivity {
 
     private static final int PERMISSION_REQUEST_CODE_CAMERA = 1;
 
-    Button mStartTestButton;
+    Button mScanButton;
     Button mFlipCameraButton;
     SurfaceView mSurfaceView;
     SurfaceHolder mSurfaceHolder;
@@ -61,8 +61,8 @@ public class MainActivity extends ActionBarActivity {
         mSurfaceView = (SurfaceView) findViewById(R.id.surfaceView);
         mSurfaceHolder = mSurfaceView.getHolder();
 
-        mStartTestButton = (Button)findViewById(R.id.start_button);
-        mStartTestButton.setOnClickListener(startTestListener);
+        mScanButton = (Button)findViewById(R.id.scan_button);
+        mScanButton.setOnClickListener(scanListener);
 
         mFlipCameraButton = (Button)findViewById(R.id.flip_button);
         mFlipCameraButton.setOnClickListener(flipCameraListener);
@@ -85,10 +85,10 @@ public class MainActivity extends ActionBarActivity {
         });
     }
 
-    private View.OnClickListener startTestListener = new View.OnClickListener() {
+    private View.OnClickListener scanListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            startCV();
+            scan();
         }
     };
 
@@ -101,7 +101,7 @@ public class MainActivity extends ActionBarActivity {
 
     public native void onCreateJNI(Activity callerActivity, AssetManager assetManager);
 
-    public native void startCV();
+    public native void scan();
 
     public native void flipCamera();
 

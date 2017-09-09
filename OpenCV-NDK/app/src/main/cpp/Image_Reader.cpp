@@ -238,7 +238,7 @@ bool Image_Reader::DisplayImage(ANativeWindow_Buffer *buf, AImage *image, void* 
       PresentImage(buf, image);
       break;
     case 90:
-      PresentImage90(buf, image, temp);
+        PresentImage90(buf, image, temp);
       break;
     case 180:
       PresentImage180(buf, image);

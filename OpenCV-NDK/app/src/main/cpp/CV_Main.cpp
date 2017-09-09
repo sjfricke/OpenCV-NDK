@@ -128,29 +128,6 @@ void CV_Main::CameraLoop() {
     }
 
 
-
-//    std::vector<cv::Rect> faces;
-//    cv::Mat frame_gray;
-//    cv::cvtColor( tempMat, frame_gray, cv::COLOR_RGBA2GRAY );
-//    equalizeHist( frame_gray, frame_gray );
-//    //-- Detect faces
-//    face_cascade.detectMultiScale( frame_gray, faces, 1.1, 2, 0|cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30) );
-//    for ( size_t i = 0; i < faces.size(); i++ )
-//    {
-//      cv::Point center( faces[i].x + faces[i].width/2, faces[i].y + faces[i].height/2 );
-//      ellipse( tempMat, center, cv::Size( faces[i].width/2, faces[i].height/2 ), 0, 0, 360, cv::Scalar( 255, 0, 255 ), 4, 8, 0 );
-//      cv::Mat faceROI = frame_gray( faces[i] );
-//      std::vector<cv::Rect> eyes;
-//      //-- In each face, detect eyes
-//      eyes_cascade.detectMultiScale( faceROI, eyes, 1.1, 2, 0 |cv::CASCADE_SCALE_IMAGE, cv::Size(30, 30) );
-//      for ( size_t j = 0; j < eyes.size(); j++ )
-//      {
-//        cv::Point eye_center( faces[i].x + eyes[j].x + eyes[j].width/2, faces[i].y + eyes[j].y + eyes[j].height/2 );
-//        int radius = cvRound( (eyes[j].width + eyes[j].height)*0.25 );
-//        cv::circle( tempMat, eye_center, radius, cv::Scalar( 255, 0, 0 ), 4, 8, 0 );
-//      }
-//    }
-
 //    bufMat = cv::Mat(buf.height, buf.stride, CV_8UC4, buf.bits);
 //    cv::cvtColor(tempMat, bufMat, CV_YUV2RGB_NV21);
 
@@ -162,14 +139,7 @@ void CV_Main::CameraLoop() {
 }
 
 void CV_Main::RunCV() {
-
-  int w = 400;
-
-  cv::Mat atom_image = cv::Mat::zeros(w, w, CV_8UC3);
-  cv::Point center = cv::Point(w / 2, w / 2);
-
-  cv::circle(atom_image, center, w / 32, cv::Scalar(0, 0, 255), cv::FILLED,
-             cv::LINE_8);
+  jumpingJackPost(40,23);
 }
 
 void CV_Main::FlipCamera() {

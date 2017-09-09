@@ -23,14 +23,14 @@ Java_com_spencerfricke_opencv_1ndk_MainActivity_onCreateJNI(
   app.SetAssetManager(AAssetManager_fromJava(env, j_asset_manager));
 }
 
-JNIEXPORT void JNICALL Java_com_spencerfricke_opencv_1ndk_MainActivity_startCV(
+JNIEXPORT void JNICALL Java_com_spencerfricke_opencv_1ndk_MainActivity_scan(
     JNIEnv *env, jobject clazz) {
   app.RunCV();
 }
 
 JNIEXPORT void JNICALL Java_com_spencerfricke_opencv_1ndk_MainActivity_flipCamera(
         JNIEnv *env, jobject clazz) {
-  app.FlipCamera();
+  //app.FlipCamera();
 }
 
 // Alot of stuff depends on the m_frame_buffer being loaded

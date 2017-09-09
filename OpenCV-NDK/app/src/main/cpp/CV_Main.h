@@ -11,6 +11,7 @@
 #include <opencv2/objdetect.hpp>
 #include <opencv2/features2d.hpp>
 // OpenCV-NDK App
+#include "Post_Request.h"
 #include "Image_Reader.h"
 #include "Native_Camera.h"
 #include "Util.h"
