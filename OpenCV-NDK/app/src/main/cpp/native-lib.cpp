@@ -28,6 +28,11 @@ JNIEXPORT void JNICALL Java_com_spencerfricke_opencv_1ndk_MainActivity_startCV(
   app.RunCV();
 }
 
+JNIEXPORT void JNICALL Java_com_spencerfricke_opencv_1ndk_MainActivity_flipCamera(
+        JNIEnv *env, jobject clazz) {
+  app.FlipCamera();
+}
+
 // Alot of stuff depends on the m_frame_buffer being loaded
 // this is done in SetNativeWindow
 JNIEXPORT void JNICALL

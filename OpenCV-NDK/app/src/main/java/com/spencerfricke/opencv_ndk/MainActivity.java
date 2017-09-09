@@ -25,6 +25,7 @@ public class MainActivity extends ActionBarActivity {
     private static final int PERMISSION_REQUEST_CODE_CAMERA = 1;
 
     Button mStartTestButton;
+    Button mFlipCameraButton;
     SurfaceView mSurfaceView;
     SurfaceHolder mSurfaceHolder;
 
@@ -63,6 +64,9 @@ public class MainActivity extends ActionBarActivity {
         mStartTestButton = (Button)findViewById(R.id.start_button);
         mStartTestButton.setOnClickListener(startTestListener);
 
+        mFlipCameraButton = (Button)findViewById(R.id.flip_button);
+        mFlipCameraButton.setOnClickListener(flipCameraListener);
+
         mSurfaceHolder.addCallback(new SurfaceHolder.Callback() {
 
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
@@ -88,9 +92,18 @@ public class MainActivity extends ActionBarActivity {
         }
     };
 
+    private View.OnClickListener flipCameraListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            flipCamera();
+        }
+    };
+
     public native void onCreateJNI(Activity callerActivity, AssetManager assetManager);
 
     public native void startCV();
+
+    public native void flipCamera();
 
     // Sends surface buffer to NDK
     public native void setSurface(Surface surface);

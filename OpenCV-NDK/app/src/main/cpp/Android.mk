@@ -11,6 +11,7 @@ LOCAL_MODULE    := libopencv_ndk
 LOCAL_CFLAGS    := -Werror -std=c++11
 LOCAL_SRC_FILES := native-lib.cpp \
                    CV_Main.cpp \
+                   Native_Camera.cpp \
                    Image_Reader.cpp
 LOCAL_LDLIBS    := -llog -landroid -lcamera2ndk -lmediandk
 include $(BUILD_SHARED_LIBRARY)

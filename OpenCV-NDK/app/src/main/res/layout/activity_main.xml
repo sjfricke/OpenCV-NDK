@@ -17,9 +17,19 @@
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="5dp"
+        android:paddingLeft="5dp"
+        android:text="Scan"/>
+
+    <Button
+        android:id="@+id/flip_button"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_marginRight="5dp"
         android:paddingRight="5dp"
-        android:text="Start"/>
+        android:text="Flip Camera"/>
 
 </RelativeLayout>
