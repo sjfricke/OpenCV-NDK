@@ -23,6 +23,8 @@
 #include <string>
 #include <vector>
 
+#define HISTORY_BUFFER 1024
+
 class CV_Main {
  public:
   CV_Main();
@@ -77,7 +79,7 @@ class CV_Main {
   // Camera variables
   Native_Camera* m_native_camera;
 
-  camera_type m_selected_camera_type = BACK_CAMERA; // Default
+  camera_type m_selected_camera_type = FRONT_CAMERA; // Default
 
   // Image Reader
   ImageFormat m_view{0, 0, 0};
@@ -96,8 +98,9 @@ class CV_Main {
   // Used to detect up and down motion
   bool scan_mode;
   int32_t squat_count;
-  int16_t squat_history[32];
+  std::vector<int16_t> squat_history;
   int8_t  history_index;
+  bool changeInY; // 0 == up    1 == down
 
   // OpenCV values
   cv::Mat display_mat;
@@ -107,6 +110,11 @@ class CV_Main {
   cv::String eyes_cascade_name = "/sdcard/Download/opencv/haarcascade_eye_tree_eyeglasses.xml";
   cv::CascadeClassifier face_cascade;
   cv::CascadeClassifier eyes_cascade;
+
+  cv::Scalar CV_PURPLE = cv::Scalar ( 255, 0, 255 );
+  cv::Scalar CV_RED = cv::Scalar ( 255, 0, 0 );
+  cv::Scalar CV_GREEN = cv::Scalar ( 0, 255, 0 );
+  cv::Scalar CV_BLUE = cv::Scalar ( 0, 0, 255 );
 };
 
 #endif  // OPENCV_NDK_CV_MAIN_H

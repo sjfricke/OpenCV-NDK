@@ -131,16 +131,23 @@ void CV_Main::FaceSquatDetect(cv::Mat &frame) {
   std::vector<cv::Rect> faces;
   cv::Mat frame_gray;
 
-  cv::cvtColor( frame, frame_gray, CV_RGBA2GRAY );
+  cv::cvtColor(frame, frame_gray, CV_RGBA2GRAY);
 
  // equalizeHist( frame_gray, frame_gray );
 
  //-- Detect faces
-  face_cascade.detectMultiScale( frame_gray, faces, 1.18, 2, 0|CV_HAAR_SCALE_IMAGE, cv::Size(70, 70) );
+  face_cascade.detectMultiScale(frame_gray, faces, 1.18, 2, 0|CV_HAAR_SCALE_IMAGE, cv::Size(70, 70));
 
   for( size_t i = 0; i < faces.size(); i++ ) {
-    cv::Point center( faces[i].x + faces[i].width*0.5, faces[i].y + faces[i].height*0.5 );
-    ellipse( frame, center, cv::Size( faces[i].width*0.5, faces[i].height*0.5), 0, 0, 360, cv::Scalar( 255, 0, 255 ), 4, 8, 0 );
+    cv::Point center(faces[i].x + faces[i].width*0.5, faces[i].y + faces[i].height*0.5);
+
+    // only track history on one person
+    if (i == 0) {
+      // center.y; /The Y value of hight of head
+    }
+
+    ellipse(frame, center, cv::Size( faces[i].width*0.5, faces[i].height*0.5), 0, 0, 360,
+            CV_PURPLE, 4, 8, 0);
 
     cv::Mat faceROI = frame_gray( faces[i] );
     std::vector<cv::Rect> eyes;
@@ -151,16 +158,33 @@ void CV_Main::FaceSquatDetect(cv::Mat &frame) {
     for( size_t j = 0; j < eyes.size(); j++ ) {
       cv::Point center( faces[i].x + eyes[j].x + eyes[j].width*0.5, faces[i].y + eyes[j].y + eyes[j].height*0.5 );
       int radius = cvRound( (eyes[j].width + eyes[j].height)*0.25 );
-      circle( frame, center, radius, cv::Scalar( 255, 0, 0 ), 4, 8, 0 );
+      circle( frame, center, radius, CV_RED, 4, 8, 0 );
     }
   }
+
+  end_t = clock();
+  total_t += (double)(end_t - start_t) / CLOCKS_PER_SEC;
+  LOGI("Current Time: %f", total_t);
+  if (total_t >= 20) {
+    // stop after 20 seconds
+    LOGI("DONE WITH 20 SECONDS");
+    scan_mode = false;
+    //jumpingJackPost(<NUMBER OF WHATEVER>,20);
+  }
+  start_t = clock();
+
 }
 
+// When scan button is hit
 void CV_Main::RunCV() {
   squat_count = 0;
-  history_index = 0;
+  squat_history.reserve(HISTORY_BUFFER);
+  history_index = 1; // first item has past to compare with
+  squat_history[0] = 0;
+
   scan_mode = true;
-  jumpingJackPost(40,23);
+  total_t = 0;
+  start_t = clock();
 }
 
 void CV_Main::FlipCamera() {
