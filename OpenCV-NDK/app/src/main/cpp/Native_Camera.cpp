@@ -86,27 +86,18 @@ bool Native_Camera::MatchCaptureSizeRequest(ImageFormat* resView, int32_t width,
       metadata, ACAMERA_SCALER_AVAILABLE_STREAM_CONFIGURATIONS, &entry);
   // format of the data: format, width, height, input?, type int32
   bool foundIt = false;
-  Display_Dimension foundRes(640, 480);
+  Display_Dimension foundRes(1000, 1000); // max resolution for current gen phones
 
   for (int i = 0; i < entry.count; ++i) {
     int32_t input = entry.data.i32[i * 4 + 3];
     int32_t format = entry.data.i32[i * 4 + 0];
     if (input) continue;
 
-    if (format == AIMAGE_FORMAT_YUV_420_888) {
+    if (format == AIMAGE_FORMAT_YUV_420_888 || format == AIMAGE_FORMAT_JPEG) {
       Display_Dimension res(entry.data.i32[i * 4 + 1],
-                            entry.data.i32[i * 4 + 2]);
-
-      LOGE("W: %d === H: %d", entry.data.i32[i * 4 + 1],
-           entry.data.i32[i * 4 + 2]);
+                           entry.data.i32[i * 4 + 2]);
       if (!disp.IsSameRatio(res)) continue;
-
-      LOGE("W: SAME RATIO %d === H: %d", entry.data.i32[i * 4 + 1],
-           entry.data.i32[i * 4 + 2]);
-      // if (format == AIMAGE_FORMAT_YUV_420_888 && res > foundRes) {
-      if (format == AIMAGE_FORMAT_YUV_420_888 &&
-          entry.data.i32[i * 4 + 1] == 1280 &&
-          entry.data.i32[i * 4 + 2] == 720) {
+      if (format == AIMAGE_FORMAT_YUV_420_888 && foundRes > res) {
         foundIt = true;
         foundRes = res;
       }
@@ -116,19 +107,17 @@ bool Native_Camera::MatchCaptureSizeRequest(ImageFormat* resView, int32_t width,
   if (foundIt) {
     resView->width = foundRes.org_width();
     resView->height = foundRes.org_height();
-
-    LOGE("Selected: W: %d - H: %d", resView->width, resView->height);
   } else {
-    LOGE("Did not find any compatible camera resolution");
     if (disp.IsPortrait()) {
-      resView->width = backup_width;
-      resView->height = backup_height;
+      resView->width = 480;
+      resView->height = 640;
     } else {
-      resView->width = backup_height ;
-      resView->height = backup_width;
+      resView->width = 640;
+      resView->height = 480;
     }
   }
   resView->format = AIMAGE_FORMAT_YUV_420_888;
+  LOGI("--- W -- H -- %d -- %d",resView->width,resView->height);
   return foundIt;
 }
 

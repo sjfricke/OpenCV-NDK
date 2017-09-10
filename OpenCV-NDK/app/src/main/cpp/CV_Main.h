@@ -22,6 +22,8 @@
 #include <cstdlib>
 #include <string>
 #include <vector>
+#include <thread>
+
 
 #define HISTORY_BUFFER 1024
 #include <queue>
@@ -65,6 +67,7 @@ class CV_Main {
 
   void RunCV();
 
+  void HaltCamera();
   void FlipCamera();
 
  private:
@@ -82,7 +85,7 @@ class CV_Main {
   // Camera variables
   Native_Camera* m_native_camera;
 
-  camera_type m_selected_camera_type = FRONT_CAMERA; // Default
+  camera_type m_selected_camera_type = BACK_CAMERA; // Default
 
   // Image Reader
   ImageFormat m_view{0, 0, 0};
@@ -122,6 +125,9 @@ class CV_Main {
   cv::Scalar CV_RED = cv::Scalar ( 255, 0, 0 );
   cv::Scalar CV_GREEN = cv::Scalar ( 0, 255, 0 );
   cv::Scalar CV_BLUE = cv::Scalar ( 0, 0, 255 );
+
+  bool m_camara_stopping_thread = false;
+  bool m_camera_thread_stopped = false;
 };
 
 #endif  // OPENCV_NDK_CV_MAIN_H
