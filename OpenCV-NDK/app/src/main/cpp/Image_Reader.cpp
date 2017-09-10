@@ -221,7 +221,7 @@ static inline uint32_t YUV2RGB(int nY, int nU, int nV) {
  * @param image a {@link AImage} instance, source of image conversion.
  *            it will be deleted via {@link AImage_delete}
  */
-bool Image_Reader::DisplayImage(ANativeWindow_Buffer *buf, AImage *image, void* temp) {
+bool Image_Reader::DisplayImage(ANativeWindow_Buffer *buf, AImage *image) {
   ASSERT(buf->format == WINDOW_FORMAT_RGBX_8888 ||
       buf->format == WINDOW_FORMAT_RGBA_8888,
          "Not supported buffer format");
@@ -238,7 +238,7 @@ bool Image_Reader::DisplayImage(ANativeWindow_Buffer *buf, AImage *image, void* 
       PresentImage(buf, image);
       break;
     case 90:
-        PresentImage90(buf, image, temp);
+        PresentImage90(buf, image);
       break;
     case 180:
       PresentImage180(buf, image);
@@ -302,7 +302,7 @@ void Image_Reader::PresentImage(ANativeWindow_Buffer *buf, AImage *image) {
  *   Converting YUV to RGB
  *   Rotation image anti-clockwise 90 degree -- (x, y) --> (-y, x)
  */
-void Image_Reader::PresentImage90(ANativeWindow_Buffer *buf, AImage *image, void* temp) {
+void Image_Reader::PresentImage90(ANativeWindow_Buffer *buf, AImage *image) {
   AImageCropRect srcRect;
   AImage_getCropRect(image, &srcRect);
 

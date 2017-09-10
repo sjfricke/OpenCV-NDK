@@ -56,8 +56,7 @@ class CV_Main {
 
   void CameraLoop();
 
-  void DetectAndDisplay( cv::Mat* frame );
-  void DetectAndDraw(const cv::HOGDescriptor &hog, cv::Mat &img);
+  void FaceSquatDetect(cv::Mat &frame);
 
   void RunCV();
 
@@ -78,7 +77,7 @@ class CV_Main {
   // Camera variables
   Native_Camera* m_native_camera;
 
-  camera_type m_selected_camera_type = FRONT_CAMERA; // Default
+  camera_type m_selected_camera_type = BACK_CAMERA; // Default
 
   // Image Reader
   ImageFormat m_view{0, 0, 0};
@@ -90,15 +89,20 @@ class CV_Main {
   // used to hold reference to assets in assets folder
   AAssetManager* m_aasset_manager;
 
+  // for timing OpenCV bottlenecks
   clock_t start_t, end_t;
   double  total_t;
-  int i, a;
+
+  // Used to detect up and down motion
+  bool scan_mode;
+  int32_t squat_count;
+  int16_t squat_history[32];
+  int8_t  history_index;
 
   // OpenCV values
-  void* temp;
-  cv::Mat tempMat;
-  cv::Mat bufMat;
-  cv::Mat frame_gray;
+  cv::Mat display_mat;
+  // Currently no way of getting file string for load() call, need to manually
+  // store the assents in the sdcard and grab them from there
   cv::String face_cascade_name = "/sdcard/Download/opencv/haarcascade_frontalface_alt.xml";
   cv::String eyes_cascade_name = "/sdcard/Download/opencv/haarcascade_eye_tree_eyeglasses.xml";
   cv::CascadeClassifier face_cascade;

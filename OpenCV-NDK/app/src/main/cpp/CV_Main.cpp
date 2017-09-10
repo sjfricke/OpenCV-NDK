@@ -1,9 +1,7 @@
 #include "CV_Main.h"
 
 CV_Main::CV_Main()
-    : m_camera_ready(false), m_image_reader(nullptr), m_native_camera(nullptr){
-  temp = malloc(1080 * 1920 * 4);
-  ASSERT(temp != nullptr, "Failed to allocate temp");
+    : m_camera_ready(false), m_image_reader(nullptr), m_native_camera(nullptr), scan_mode(false) {
 
 //  AAssetDir* assetDir = AAssetManager_openDir(m_aasset_manager, "");
 //  const char* filename = (const char*)NULL;
@@ -47,10 +45,6 @@ CV_Main::~CV_Main() {
     delete (m_image_reader);
     m_image_reader = nullptr;
   }
-
-  if (temp != nullptr) {
-    free(temp);
-  }
 }
 
 void CV_Main::OnCreate(JNIEnv* env, jobject caller_activity) {
@@ -78,20 +72,13 @@ void CV_Main::SetUpCamera() {
 
   m_native_camera = new Native_Camera(m_selected_camera_type);
 
-  LOGI("TEST W: %d --- H: %d", ANativeWindow_getWidth(m_native_window),
-       ANativeWindow_getHeight(m_native_window));
-
-  //    m_view.height = 1920;
-  //    m_view.width = 1080;
-  //    m_view.format = AIMAGE_FORMAT_YUV_420_888;
   m_native_camera->MatchCaptureSizeRequest(&m_view,
                                            ANativeWindow_getWidth(m_native_window),
                                            ANativeWindow_getHeight(m_native_window));
 
-  ASSERT(m_view.width && m_view.height,
-         "Could not find supportable resolution");
+  ASSERT(m_view.width && m_view.height, "Could not find supportable resolution");
 
-  // Here we set the buffer to use RGBA_8888 as default might be; RGB_565
+  // Here we set the buffer to use RGBX_8888 as default might be; RGB_565
   ANativeWindow_setBuffersGeometry(m_native_window, m_view.height, m_view.width,
                                    WINDOW_FORMAT_RGBX_8888);
 
@@ -104,10 +91,7 @@ void CV_Main::SetUpCamera() {
 }
 
 void CV_Main::CameraLoop() {
-  bool test = false;
-
-  cv::HOGDescriptor hog;
-  hog.setSVMDetector(cv::HOGDescriptor::getDefaultPeopleDetector());
+  bool buffer_printout = false;
 
   while (1) {
     if (!m_camera_ready || !m_image_reader) continue;
@@ -118,58 +102,45 @@ void CV_Main::CameraLoop() {
     }
 
     ANativeWindow_acquire(m_native_window);
-    ANativeWindow_Buffer buf;
-    if (ANativeWindow_lock(m_native_window, &buf, nullptr) < 0) {
+    ANativeWindow_Buffer buffer;
+    if (ANativeWindow_lock(m_native_window, &buffer, nullptr) < 0) {
       m_image_reader->DeleteImage(m_image);
       continue;
     }
 
-    if (false == test) { test = true;
-      LOGI("========= H-W-S-F: %d, %d, %d, %d", buf.height, buf.width, buf.stride, buf.format);
+    if (false == buffer_printout) {
+      buffer_printout = true;
+      LOGI("/// H-W-S-F: %d, %d, %d, %d", buffer.height, buffer.width, buffer.stride, buffer.format);
     }
 
-    m_image_reader->DisplayImage(&buf, m_image, temp);
-   // memcpy(buf.bits, temp, buf.height * buf.stride * 4);
-//
-//    tempMat = cv::Mat(buf.height, buf.stride, CV_8UC3, temp);
-//  cv::Mat outputMat = cv::Mat(buf->height, buf->width, CV_8UC4, buf->bits);
-    tempMat = cv::Mat(buf.height, buf.stride, CV_8UC4, buf.bits);
+    m_image_reader->DisplayImage(&buffer, m_image);
 
-//    start_t = clock();
-   DetectAndDisplay(&tempMat);
-   // DetectAndDraw(hog, tempMat);
+    display_mat = cv::Mat(buffer.height, buffer.stride, CV_8UC4, buffer.bits);
 
-//    end_t = clock();
-//    total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
-//    LOGI("TIME BEFORE LOOP: %f\n", total_t  )
-
+    if (true == scan_mode) {
+      FaceSquatDetect(display_mat);
+    }
 
     ANativeWindow_unlockAndPost(m_native_window);
     ANativeWindow_release(m_native_window);
   }
 }
 
-void CV_Main::DetectAndDisplay( cv::Mat* frame ) {
+void CV_Main::FaceSquatDetect(cv::Mat &frame) {
 
   std::vector<cv::Rect> faces;
   cv::Mat frame_gray;
 
-  cv::cvtColor( *frame, frame_gray, CV_RGBA2GRAY );
+  cv::cvtColor( frame, frame_gray, CV_RGBA2GRAY );
 
  // equalizeHist( frame_gray, frame_gray );
 
-  start_t = clock();
  //-- Detect faces
-  face_cascade.detectMultiScale( frame_gray, faces, 1.15, 2, 0|CV_HAAR_SCALE_IMAGE, cv::Size(70, 70) );
-  end_t = clock();
-  total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
-  LOGI("TIME detectMultiScale: %f\n", total_t  );
+  face_cascade.detectMultiScale( frame_gray, faces, 1.18, 2, 0|CV_HAAR_SCALE_IMAGE, cv::Size(70, 70) );
 
-
-  for( size_t i = 0; i < faces.size(); i++ )
-  {
+  for( size_t i = 0; i < faces.size(); i++ ) {
     cv::Point center( faces[i].x + faces[i].width*0.5, faces[i].y + faces[i].height*0.5 );
-    ellipse( *frame, center, cv::Size( faces[i].width*0.5, faces[i].height*0.5), 0, 0, 360, cv::Scalar( 255, 0, 255 ), 4, 8, 0 );
+    ellipse( frame, center, cv::Size( faces[i].width*0.5, faces[i].height*0.5), 0, 0, 360, cv::Scalar( 255, 0, 255 ), 4, 8, 0 );
 
     cv::Mat faceROI = frame_gray( faces[i] );
     std::vector<cv::Rect> eyes;
@@ -177,59 +148,18 @@ void CV_Main::DetectAndDisplay( cv::Mat* frame ) {
     //-- In each face, detect eyes
     eyes_cascade.detectMultiScale( faceROI, eyes, 1.2, 2, 0 |CV_HAAR_SCALE_IMAGE, cv::Size(45, 45) );
 
-    for( size_t j = 0; j < eyes.size(); j++ )
-    {
+    for( size_t j = 0; j < eyes.size(); j++ ) {
       cv::Point center( faces[i].x + eyes[j].x + eyes[j].width*0.5, faces[i].y + eyes[j].y + eyes[j].height*0.5 );
       int radius = cvRound( (eyes[j].width + eyes[j].height)*0.25 );
-      circle( *frame, center, radius, cv::Scalar( 255, 0, 0 ), 4, 8, 0 );
+      circle( frame, center, radius, cv::Scalar( 255, 0, 0 ), 4, 8, 0 );
     }
   }
 }
 
-void CV_Main::DetectAndDraw(const cv::HOGDescriptor &hog, cv::Mat &img) {
-  std::vector<cv::Rect> found, found_filtered;
-  // Run the detector with default parameters. to get a higher hit-rate
-  // (and more false alarms, respectively), decrease the hitThreshold and
-  // groupThreshold (set groupThreshold to 0 to turn off the grouping completely).
-
-  cv::Mat frame_gray;
-  cv::cvtColor( img, frame_gray, CV_RGBA2GRAY );
-
-  start_t = clock();
-  hog.detectMultiScale(frame_gray, found, 4, cv::Size(4,4), cv::Size(0,0), 2.00, 2);
-  end_t = clock();
-  total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
-  LOGI("TIME detectMultiScale: %f\n", total_t  );
-
-  for(size_t i = 0; i < found.size(); i++ )
-  {
-    cv::Rect r = found[i];
-
-    size_t j;
-    // Do not add small detections inside a bigger detection.
-    for ( j = 0; j < found.size(); j++ )
-      if ( j != i && (r & found[j]) == r )
-        break;
-
-    if ( j == found.size() )
-      found_filtered.push_back(r);
-  }
-
-  for (size_t i = 0; i < found_filtered.size(); i++)
-  {
-    cv::Rect r = found_filtered[i];
-
-    // The HOG detector returns slightly larger rectangles than the real objects,
-    // so we slightly shrink the rectangles to get a nicer output.
-    r.x += cvRound(r.width*0.1);
-    r.width = cvRound(r.width*0.8);
-    r.y += cvRound(r.height*0.07);
-    r.height = cvRound(r.height*0.8);
-    rectangle(img, r.tl(), r.br(), cv::Scalar(0,255,0), 3);
-  }
-}
-
 void CV_Main::RunCV() {
+  squat_count = 0;
+  history_index = 0;
+  scan_mode = true;
   jumpingJackPost(40,23);
 }
 

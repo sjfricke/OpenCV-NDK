@@ -38,16 +38,6 @@ Native_Camera::Native_Camera(camera_type type) {
   ASSERT(cameraStatus == ACAMERA_OK, "Failed to open camera device (id: %s)",
          m_selected_camera_id);
 
-   // TEMPLATE_RECORD because rather have post-processing quality for more
-  // accureate CV algo
-  // Frame rate should be good since all image buffers are being done from
-  // native side
-  cameraStatus = ACameraDevice_createCaptureRequest(
-      m_camera_device, TEMPLATE_RECORD, &m_capture_request);
-  ASSERT(cameraStatus == ACAMERA_OK,
-         "Failed to create preview capture request (id: %s)",
-         m_selected_camera_id);
-
   m_camera_ready = true;
 }
 
