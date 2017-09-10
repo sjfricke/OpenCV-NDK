@@ -1,5 +1,5 @@
 #include "CV_Main.h"
-#include <queue>
+
 CV_Main::CV_Main()
     : m_camera_ready(false), m_image(nullptr), m_image_reader(nullptr), m_native_camera(nullptr), scan_mode(false) {
 
@@ -127,53 +127,24 @@ void CV_Main::CameraLoop() {
   FlipCamera();
 }
 
- int CV_Main::getcount()
-        {
-            return count;
-        }
-void CV_Main::Counts(float y)
-{
+void CV_Main::CountSquat(float y) {
+  if((fabs(y - previous_pose) < 10 ) || previous_pose == 0) {
+    last_pose.push(y);
+    previous_pose = y;
+  }
 
-    if((fabs(y - previous_pose) < 10 ) || previous_pose == 0) {
-        last_pose.push(y);
-        previous_pose = y;
-    }
-
-
-
-if(last_pose.size() > 3)
-
-{
-
-
-   LOGI("POSITION Y : %f" , y);
+  if(last_pose.size() > 3) {
+    LOGI("POSITION Y : %f" , y);
     float diff  ;
     diff = y - last_pose.front();
 
     if ( diff > 10 && going_up == 0 ) {
-
-        count = count + 1 ;
-        going_up = 1;
-
+      m_squat_count++;
+      going_up = 1;
+    } else if( diff < -10 ) {
+      going_up = 0;
     }
-
-    if( diff < -10 ) {
-
-        going_up = 0 ;
-
-    }
-
-
-
-
-}
-
-
-
-
-
-
-
+  }
 }
 
 void CV_Main::FaceSquatDetect(cv::Mat &frame) {
@@ -192,7 +163,7 @@ void CV_Main::FaceSquatDetect(cv::Mat &frame) {
     cv::Point center(faces[i].x + faces[i].width*0.5, faces[i].y + faces[i].height*0.5);
 
     // only track history on one person
-    Counts(center.y);
+    CountSquat(center.y);
 
     ellipse(frame, center, cv::Size( faces[i].width*0.5, faces[i].height*0.5), 0, 0, 360,
             CV_PURPLE, 4, 8, 0);
@@ -218,9 +189,9 @@ void CV_Main::FaceSquatDetect(cv::Mat &frame) {
     // stop after 20 seconds
     LOGI("DONE WITH 20 SECONDS");
     scan_mode = false;
-      LOGI("number of jumpingjacks: %d", count);
+    LOGI("number of jumpingjacks: %d", m_squat_count);
 
-    jumpingJackPost(count,20);
+    jumpingJackPost(m_squat_count, 20);
   }
   start_t = clock();
 
@@ -228,13 +199,8 @@ void CV_Main::FaceSquatDetect(cv::Mat &frame) {
 
 // When scan button is hit
 void CV_Main::RunCV() {
-  squat_count = 0;
-  squat_history.reserve(HISTORY_BUFFER);
-  history_index = 1; // first item has past to compare with
-  squat_history[0] = 0;
-
   scan_mode = true;
-    count = 0;
+  m_squat_count = 0;
   total_t = 0;
   start_t = clock();
 }
