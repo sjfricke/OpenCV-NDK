@@ -1,7 +1,7 @@
 #include "CV_Main.h"
 
 CV_Main::CV_Main()
-    : m_camera_ready(false), m_image_reader(nullptr), m_native_camera(nullptr), scan_mode(false) {
+    : m_camera_ready(false), m_image(nullptr), m_image_reader(nullptr), m_native_camera(nullptr), scan_mode(false) {
 
 //  AAssetDir* assetDir = AAssetManager_openDir(m_aasset_manager, "");
 //  const char* filename = (const char*)NULL;
@@ -40,6 +40,7 @@ CV_Main::~CV_Main() {
     ANativeWindow_release(m_native_window);
     m_native_window = nullptr;
   }
+
 
   if (m_image_reader != nullptr) {
     delete (m_image_reader);
@@ -94,17 +95,16 @@ void CV_Main::CameraLoop() {
   bool buffer_printout = false;
 
   while (1) {
-    if (!m_camera_ready || !m_image_reader) continue;
-    //         AImage *image = m_image_reader->GetNextImage();
+    if (m_camera_thread_stopped) { break; }
+    if (!m_camera_ready || !m_image_reader) { continue; }
     m_image = m_image_reader->GetLatestImage();
-    if (!m_image) {
-      continue;
-    }
+    if (m_image == nullptr) { continue; }
 
     ANativeWindow_acquire(m_native_window);
     ANativeWindow_Buffer buffer;
     if (ANativeWindow_lock(m_native_window, &buffer, nullptr) < 0) {
       m_image_reader->DeleteImage(m_image);
+      m_image = nullptr;
       continue;
     }
 
@@ -124,6 +124,7 @@ void CV_Main::CameraLoop() {
     ANativeWindow_unlockAndPost(m_native_window);
     ANativeWindow_release(m_native_window);
   }
+  FlipCamera();
 }
 
 void CV_Main::FaceSquatDetect(cv::Mat &frame) {
@@ -187,8 +188,7 @@ void CV_Main::RunCV() {
   start_t = clock();
 }
 
-void CV_Main::FlipCamera() {
-
+void CV_Main::HaltCamera() {
   if (m_native_camera == nullptr) {
     LOGE("Can't flip camera without camera instance");
     return; // need to setup camera
@@ -197,19 +197,27 @@ void CV_Main::FlipCamera() {
     return; // need a second camera to flip with
   }
 
+  m_camera_thread_stopped = true;
+}
+
+void CV_Main::FlipCamera() {
+  m_camera_thread_stopped = false;
+
+  // reset info
+  if (m_image_reader != nullptr) {
+    delete (m_image_reader);
+    m_image_reader = nullptr;
+  }
+  delete m_native_camera;
+
   if (m_selected_camera_type == FRONT_CAMERA) {
     m_selected_camera_type = BACK_CAMERA;
   } else {
     m_selected_camera_type = FRONT_CAMERA;
   }
 
-  // reset info
-  m_camera_ready =  false;
-  m_image_reader->DeleteImage(m_image);
-  if (m_image_reader != nullptr) {
-    delete (m_image_reader);
-  }
-  delete m_native_camera;
-
   SetUpCamera();
+
+  std::thread loopThread(&CV_Main::CameraLoop, this);
+  loopThread.detach();
 }

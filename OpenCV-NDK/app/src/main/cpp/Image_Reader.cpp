@@ -51,18 +51,15 @@ Image_Reader::Image_Reader(ImageFormat *res, enum AIMAGE_FORMATS format)
   ASSERT(reader_ && status == AMEDIA_OK, "Failed to create AImageReader");
 
   AImageReader_ImageListener listener{
-      .context = this, .onImageAvailable = OnImageCallback,
+      .context = this,
+      .onImageAvailable = OnImageCallback,
   };
   AImageReader_setImageListener(reader_, &listener);
 
   // assuming 4 bit per pixel max
-  LOGI("Image Buffer Size: %d", res->width * res->height * 4);
+  LOGE("Image Buffer Size: %d", res->width * res->height * 4);
   imageBuffer_ = (uint8_t*)malloc(res->width * res->height * 4);
   ASSERT(imageBuffer_ != nullptr, "Failed to allocate imageBuffer_");
-
-
-//  temp = malloc(1080 * 1920 * 4);
-//  ASSERT(temp != nullptr, "Failed to allocate temp");
 }
 
 Image_Reader::~Image_Reader() {
@@ -72,10 +69,6 @@ Image_Reader::~Image_Reader() {
   if (imageBuffer_ != nullptr) {
     free(imageBuffer_);
   }
-
-//  if (temp != nullptr) {
-//    free(temp);
-//  }
 }
 
 void Image_Reader::ImageCallback(AImageReader *reader) {
@@ -135,6 +128,7 @@ AImage *Image_Reader::GetLatestImage(void) {
   if (status != AMEDIA_OK) {
     return nullptr;
   }
+
   return image;
 }
 
@@ -155,7 +149,10 @@ int32_t Image_Reader::GetMaxImage(void) {
  * @param image {@link AImage} instance to be deleted
  */
 void Image_Reader::DeleteImage(AImage *image) {
-  if (image) AImage_delete(image);
+  if (image != nullptr) {
+    AImage_delete(image);
+    image = nullptr;
+  }
 }
 
 /**
@@ -238,7 +235,7 @@ bool Image_Reader::DisplayImage(ANativeWindow_Buffer *buf, AImage *image) {
       PresentImage(buf, image);
       break;
     case 90:
-        PresentImage90(buf, image);
+      PresentImage90(buf, image);
       break;
     case 180:
       PresentImage180(buf, image);
@@ -251,6 +248,7 @@ bool Image_Reader::DisplayImage(ANativeWindow_Buffer *buf, AImage *image) {
   }
 
   AImage_delete(image);
+  image = nullptr;
 
   return true;
 }
@@ -266,15 +264,14 @@ void Image_Reader::PresentImage(ANativeWindow_Buffer *buf, AImage *image) {
   AImageCropRect srcRect;
   AImage_getCropRect(image, &srcRect);
 
-  int32_t yStride, uvStride;
-  uint8_t *yPixel, *uPixel, *vPixel;
-  int32_t yLen, uLen, vLen;
   AImage_getPlaneRowStride(image, 0, &yStride);
   AImage_getPlaneRowStride(image, 1, &uvStride);
+  yPixel = imageBuffer_;
   AImage_getPlaneData(image, 0, &yPixel, &yLen);
+  vPixel = imageBuffer_ + yLen;
   AImage_getPlaneData(image, 1, &vPixel, &vLen);
+  uPixel = imageBuffer_ + yLen + vLen;
   AImage_getPlaneData(image, 2, &uPixel, &uLen);
-  int32_t uvPixelStride;
   AImage_getPlanePixelStride(image, 1, &uvPixelStride);
 
   int32_t height = MIN(buf->height, (srcRect.bottom - srcRect.top));
@@ -306,9 +303,6 @@ void Image_Reader::PresentImage90(ANativeWindow_Buffer *buf, AImage *image) {
   AImageCropRect srcRect;
   AImage_getCropRect(image, &srcRect);
 
-  int32_t yStride, uvStride;
-  uint8_t *yPixel, *uPixel, *vPixel;
-  int32_t yLen, uLen, vLen;
   AImage_getPlaneRowStride(image, 0, &yStride);
   AImage_getPlaneRowStride(image, 1, &uvStride);
   yPixel = imageBuffer_;
@@ -317,19 +311,12 @@ void Image_Reader::PresentImage90(ANativeWindow_Buffer *buf, AImage *image) {
   AImage_getPlaneData(image, 1, &vPixel, &vLen);
   uPixel = imageBuffer_ + yLen + vLen;
   AImage_getPlaneData(image, 2, &uPixel, &uLen);
-  int32_t uvPixelStride;
   AImage_getPlanePixelStride(image, 1, &uvPixelStride);
-
-//  memcpy(temp, imageBuffer_, yLen + uLen + vLen);
-//  cv::Mat inputMat = cv::Mat(imageHeight_, imageWidth_, CV_8UC1, imageBuffer_);
-//  cv::Mat outputMat = cv::Mat(buf->height, buf->stride, CV_8UC4, buf->bits);
-//  cv::cvtColor(inputMat, outputMat, CV_YUV2RGBA_NV21);
 
   int32_t height = MIN(buf->width, (srcRect.bottom - srcRect.top));
   int32_t width = MIN(buf->height, (srcRect.right - srcRect.left));
 
   uint32_t *out = static_cast<uint32_t *>(buf->bits);
-//  uint32_t *out = static_cast<uint32_t *>(temp);
   out += height - 1;
   for (int32_t y = 0; y < height; y++) {
     const uint8_t *pY = yPixel + yStride * (y + srcRect.top) + srcRect.left;
@@ -341,7 +328,10 @@ void Image_Reader::PresentImage90(ANativeWindow_Buffer *buf, AImage *image) {
     for (int32_t x = 0; x < width; x++) {
       const int32_t uv_offset = (x >> 1) * uvPixelStride;
       // [x, y]--> [-y, x]
-      out[x * buf->stride] = YUV2RGB(pY[x], pU[uv_offset], pV[uv_offset]);
+      int testb = pU[uv_offset];
+      int testc = pV[uv_offset];
+      int testA = pY[x];
+      out[x * buf->stride] = YUV2RGB(testA, testb, testc);
     }
     out -= 1;  // move to the next column
   }
@@ -356,15 +346,14 @@ void Image_Reader::PresentImage180(ANativeWindow_Buffer *buf, AImage *image) {
   AImageCropRect srcRect;
   AImage_getCropRect(image, &srcRect);
 
-  int32_t yStride, uvStride;
-  uint8_t *yPixel, *uPixel, *vPixel;
-  int32_t yLen, uLen, vLen;
   AImage_getPlaneRowStride(image, 0, &yStride);
   AImage_getPlaneRowStride(image, 1, &uvStride);
+  yPixel = imageBuffer_;
   AImage_getPlaneData(image, 0, &yPixel, &yLen);
+  vPixel = imageBuffer_ + yLen;
   AImage_getPlaneData(image, 1, &vPixel, &vLen);
+  uPixel = imageBuffer_ + yLen + vLen;
   AImage_getPlaneData(image, 2, &uPixel, &uLen);
-  int32_t uvPixelStride;
   AImage_getPlanePixelStride(image, 1, &uvPixelStride);
 
   int32_t height = MIN(buf->height, (srcRect.bottom - srcRect.top));
@@ -398,9 +387,6 @@ void Image_Reader::PresentImage270(ANativeWindow_Buffer *buf, AImage *image) {
   AImageCropRect srcRect;
   AImage_getCropRect(image, &srcRect);
 
-  int32_t yStride, uvStride;
-  uint8_t *yPixel, *uPixel, *vPixel;
-  int32_t yLen, uLen, vLen;
   AImage_getPlaneRowStride(image, 0, &yStride);
   AImage_getPlaneRowStride(image, 1, &uvStride);
   yPixel = imageBuffer_;
@@ -409,7 +395,6 @@ void Image_Reader::PresentImage270(ANativeWindow_Buffer *buf, AImage *image) {
   AImage_getPlaneData(image, 1, &vPixel, &vLen);
   uPixel = imageBuffer_ + yLen + vLen;
   AImage_getPlaneData(image, 2, &uPixel, &uLen);
-  int32_t uvPixelStride;
   AImage_getPlanePixelStride(image, 1, &uvPixelStride);
 
   int32_t height = MIN(buf->width, (srcRect.bottom - srcRect.top));
@@ -425,8 +410,11 @@ void Image_Reader::PresentImage270(ANativeWindow_Buffer *buf, AImage *image) {
 
     for (int32_t x = 0; x < width; x++) {
       const int32_t uv_offset = (x >> 1) * uvPixelStride;
+      int testb = pU[uv_offset];
+      int testc = pV[uv_offset];
+      int testA = pY[x];
       out[(width - 1 - x) * buf->stride] =
-          YUV2RGB(pY[x], pU[uv_offset], pV[uv_offset]);
+          YUV2RGB(testA, testb, testc);
     }
     out += 1;  // move to the next column
   }

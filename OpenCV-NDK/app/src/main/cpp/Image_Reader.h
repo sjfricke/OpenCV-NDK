@@ -92,7 +92,11 @@ class Image_Reader {
   int32_t imageWidth_;
 
   uint8_t* imageBuffer_;
-//  void* temp;
+
+  int32_t yStride, uvStride;
+  uint8_t *yPixel, *uPixel, *vPixel;
+  int32_t yLen, uLen, vLen;
+  int32_t uvPixelStride;
 };
 
 #endif  // OPENCV_NDK_IMAGE_READER_H

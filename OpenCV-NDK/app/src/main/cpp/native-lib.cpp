@@ -1,6 +1,5 @@
 #include <android/asset_manager_jni.h>
 #include <android/native_window_jni.h>
-#include <jni.h>
 #include <thread>
 #include "CV_Main.h"
 
@@ -30,7 +29,7 @@ JNIEXPORT void JNICALL Java_com_spencerfricke_opencv_1ndk_MainActivity_scan(
 
 JNIEXPORT void JNICALL Java_com_spencerfricke_opencv_1ndk_MainActivity_flipCamera(
         JNIEnv *env, jobject clazz) {
-  //app.FlipCamera();
+  app.HaltCamera();
 }
 
 // Alot of stuff depends on the m_frame_buffer being loaded
