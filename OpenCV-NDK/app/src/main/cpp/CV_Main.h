@@ -24,7 +24,7 @@
 #include <vector>
 
 #define HISTORY_BUFFER 1024
-
+#include <queue>
 class CV_Main {
  public:
   CV_Main();
@@ -46,6 +46,9 @@ class CV_Main {
   // Cache the Java VM used from the Java layer.
   void SetJavaVM(JavaVM* pjava_vm) { java_vm = pjava_vm; }
 
+    int getcount();
+
+    void Counts(float y_position);
   // sets Surface buffer reference pointer
   void SetNativeWindow(ANativeWindow* native_indow);
 
@@ -102,7 +105,11 @@ class CV_Main {
   int8_t  history_index;
   bool changeInY; // 0 == up    1 == down
 
-  // OpenCV values
+    std::queue<float> last_pose;
+    bool going_up = 0;
+    int count = 0;
+    float previous_pose = 0;
+    // OpenCV values
   cv::Mat display_mat;
   // Currently no way of getting file string for load() call, need to manually
   // store the assents in the sdcard and grab them from there

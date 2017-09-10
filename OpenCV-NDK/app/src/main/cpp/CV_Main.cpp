@@ -1,5 +1,5 @@
 #include "CV_Main.h"
-
+#include <queue>
 CV_Main::CV_Main()
     : m_camera_ready(false), m_image_reader(nullptr), m_native_camera(nullptr), scan_mode(false) {
 
@@ -126,6 +126,55 @@ void CV_Main::CameraLoop() {
   }
 }
 
+ int CV_Main::getcount()
+        {
+            return count;
+        }
+void CV_Main::Counts(float y)
+{
+
+    if((fabs(y - previous_pose) < 10 ) || previous_pose == 0) {
+        last_pose.push(y);
+        previous_pose = y;
+    }
+
+
+
+if(last_pose.size() > 3)
+
+{
+
+
+   LOGI("POSITION Y : %f" , y);
+    float diff  ;
+    diff = y - last_pose.front();
+
+    if ( diff > 10 && going_up == 0 ) {
+
+        count = count + 1 ;
+        going_up = 1;
+
+    }
+
+    if( diff < -10 ) {
+
+        going_up = 0 ;
+
+    }
+
+
+
+
+}
+
+
+
+
+
+
+
+}
+
 void CV_Main::FaceSquatDetect(cv::Mat &frame) {
 
   std::vector<cv::Rect> faces;
@@ -142,9 +191,7 @@ void CV_Main::FaceSquatDetect(cv::Mat &frame) {
     cv::Point center(faces[i].x + faces[i].width*0.5, faces[i].y + faces[i].height*0.5);
 
     // only track history on one person
-    if (i == 0) {
-      // center.y; /The Y value of hight of head
-    }
+    Counts(center.y);
 
     ellipse(frame, center, cv::Size( faces[i].width*0.5, faces[i].height*0.5), 0, 0, 360,
             CV_PURPLE, 4, 8, 0);
@@ -166,10 +213,13 @@ void CV_Main::FaceSquatDetect(cv::Mat &frame) {
   total_t += (double)(end_t - start_t) / CLOCKS_PER_SEC;
   LOGI("Current Time: %f", total_t);
   if (total_t >= 20) {
+
     // stop after 20 seconds
     LOGI("DONE WITH 20 SECONDS");
     scan_mode = false;
-    //jumpingJackPost(<NUMBER OF WHATEVER>,20);
+      LOGI("number of jumpingjacks: %d", count);
+
+    jumpingJackPost(count,20);
   }
   start_t = clock();
 
@@ -183,6 +233,7 @@ void CV_Main::RunCV() {
   squat_history[0] = 0;
 
   scan_mode = true;
+    count = 0;
   total_t = 0;
   start_t = clock();
 }
