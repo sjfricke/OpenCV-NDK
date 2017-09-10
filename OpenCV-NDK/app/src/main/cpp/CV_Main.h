@@ -17,6 +17,7 @@
 #include "Util.h"
 // C Libs
 #include <unistd.h>
+#include <time.h>
 // STD Libs
 #include <cstdlib>
 #include <string>
@@ -55,6 +56,9 @@ class CV_Main {
 
   void CameraLoop();
 
+  void DetectAndDisplay( cv::Mat* frame );
+  void DetectAndDraw(const cv::HOGDescriptor &hog, cv::Mat &img);
+
   void RunCV();
 
   void FlipCamera();
@@ -74,7 +78,7 @@ class CV_Main {
   // Camera variables
   Native_Camera* m_native_camera;
 
-  camera_type m_selected_camera_type = BACK_CAMERA; // Default
+  camera_type m_selected_camera_type = FRONT_CAMERA; // Default
 
   // Image Reader
   ImageFormat m_view{0, 0, 0};
@@ -86,13 +90,17 @@ class CV_Main {
   // used to hold reference to assets in assets folder
   AAssetManager* m_aasset_manager;
 
+  clock_t start_t, end_t;
+  double  total_t;
+  int i, a;
+
   // OpenCV values
   void* temp;
   cv::Mat tempMat;
   cv::Mat bufMat;
   cv::Mat frame_gray;
-  cv::String face_cascade_name = "haarcascade_frontalface_alt.xml";
-  cv::String eyes_cascade_name = "haarcascade_eye_tree_eyeglasses.xml";
+  cv::String face_cascade_name = "/sdcard/Download/opencv/haarcascade_frontalface_alt.xml";
+  cv::String eyes_cascade_name = "/sdcard/Download/opencv/haarcascade_eye_tree_eyeglasses.xml";
   cv::CascadeClassifier face_cascade;
   cv::CascadeClassifier eyes_cascade;
 };

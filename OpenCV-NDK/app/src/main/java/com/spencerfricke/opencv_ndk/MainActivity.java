@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
+import android.net.Uri;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -13,6 +14,8 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+
+import java.net.URL;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -36,7 +39,10 @@ public class MainActivity extends ActionBarActivity {
 
         // Asking for permissions
         String[] accessPermissions = new String[] {
-                Manifest.permission.CAMERA
+                Manifest.permission.CAMERA,
+                Manifest.permission.INTERNET,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
         };
         boolean needRequire = false;
         for(String access : accessPermissions) {

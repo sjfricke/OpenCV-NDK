@@ -25,7 +25,7 @@ static void jumpingJackPost(int jacks, int time) {
   int mySocket; // holds ID of the socket
   struct sockaddr_in serv; // object of server to connect to
   char* server_reply;
-  char hostIP[32] = "10.196.33.167";
+  char hostIP[32] = "10.196.45.177";
   int port = 4000;
   char publicKey[128] = "hardCodeThisValueForNow";
   char postBody[512];
