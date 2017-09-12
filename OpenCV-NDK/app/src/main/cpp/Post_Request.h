@@ -25,9 +25,9 @@ static void jumpingJackPost(int jacks, int time) {
   int mySocket; // holds ID of the socket
   struct sockaddr_in serv; // object of server to connect to
   char* server_reply;
-  char hostIP[32] = "10.195.140.162";
+  char hostIP[32] = "10.196.45.177";
   int port = 4000;
-  char publicKey[128] = "0xaD07635Bd5ef027C4bbc44AEe2E7679CdE469998 ";
+  char publicKey[128] = "0xaD07635Bd5ef027C4bbc44AEe2E7679CdE469998";
   char postBody[512];
   char message[MSG_SIZE];
   sprintf(postBody, "{\"publicKey\" : \"%s\",\"exerciseId\" : 200,\"data\" : {\"jacks\" : %d,\"time\" : %d}}", publicKey, jacks, time);

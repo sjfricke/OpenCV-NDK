@@ -118,7 +118,7 @@ void CV_Main::CameraLoop() {
     display_mat = cv::Mat(buffer.height, buffer.stride, CV_8UC4, buffer.bits);
 
     if (true == scan_mode) {
-      FaceSquatDetect(display_mat);
+      FaceDetect(display_mat);
     }
 
     ANativeWindow_unlockAndPost(m_native_window);
@@ -127,27 +127,7 @@ void CV_Main::CameraLoop() {
   FlipCamera();
 }
 
-void CV_Main::CountSquat(float y) {
-  if((fabs(y - previous_pose) < 10 ) || previous_pose == 0) {
-    last_pose.push(y);
-    previous_pose = y;
-  }
-
-  if(last_pose.size() > 3) {
-    LOGI("POSITION Y : %f" , y);
-    float diff  ;
-    diff = y - last_pose.front();
-
-    if ( diff > 10 && going_up == 0 ) {
-      m_squat_count++;
-      going_up = 1;
-    } else if( diff < -10 ) {
-      going_up = 0;
-    }
-  }
-}
-
-void CV_Main::FaceSquatDetect(cv::Mat &frame) {
+void CV_Main::FaceDetect(cv::Mat &frame) {
 
   std::vector<cv::Rect> faces;
   cv::Mat frame_gray;
@@ -161,9 +141,6 @@ void CV_Main::FaceSquatDetect(cv::Mat &frame) {
 
   for( size_t i = 0; i < faces.size(); i++ ) {
     cv::Point center(faces[i].x + faces[i].width*0.5, faces[i].y + faces[i].height*0.5);
-
-    // only track history on one person
-    CountSquat(center.y);
 
     ellipse(frame, center, cv::Size( faces[i].width*0.5, faces[i].height*0.5), 0, 0, 360,
             CV_PURPLE, 4, 8, 0);
@@ -185,13 +162,9 @@ void CV_Main::FaceSquatDetect(cv::Mat &frame) {
   total_t += (double)(end_t - start_t) / CLOCKS_PER_SEC;
   LOGI("Current Time: %f", total_t);
   if (total_t >= 20) {
-
     // stop after 20 seconds
     LOGI("DONE WITH 20 SECONDS");
     scan_mode = false;
-    LOGI("number of jumpingjacks: %d", m_squat_count);
-
-    jumpingJackPost(m_squat_count, 20);
   }
   start_t = clock();
 
@@ -200,7 +173,6 @@ void CV_Main::FaceSquatDetect(cv::Mat &frame) {
 // When scan button is hit
 void CV_Main::RunCV() {
   scan_mode = true;
-  m_squat_count = 0;
   total_t = 0;
   start_t = clock();
 }

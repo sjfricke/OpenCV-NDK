@@ -11,7 +11,6 @@
 #include <opencv2/objdetect.hpp>
 #include <opencv2/features2d.hpp>
 // OpenCV-NDK App
-#include "Post_Request.h"
 #include "Image_Reader.h"
 #include "Native_Camera.h"
 #include "Util.h"
@@ -23,7 +22,6 @@
 #include <string>
 #include <vector>
 #include <thread>
-#include <queue>
 
 class CV_Main {
  public:
@@ -46,10 +44,6 @@ class CV_Main {
   // Cache the Java VM used from the Java layer.
   void SetJavaVM(JavaVM* pjava_vm) { java_vm = pjava_vm; }
 
-  int GetSquatCount() { return m_squat_count; }
-
-  void CountSquat(float y_position);
-
   // sets Surface buffer reference pointer
   void SetNativeWindow(ANativeWindow* native_indow);
 
@@ -62,7 +56,7 @@ class CV_Main {
 
   void CameraLoop();
 
-  void FaceSquatDetect(cv::Mat &frame);
+  void FaceDetect(cv::Mat &frame);
 
   void RunCV();
 
@@ -103,10 +97,6 @@ class CV_Main {
   // Used to detect up and down motion
   bool scan_mode;
 
-  std::queue<float> last_pose;
-  bool going_up = 0;
-  int m_squat_count = 0;
-  float previous_pose = 0;
   // OpenCV values
   cv::Mat display_mat;
   // Currently no way of getting file string for load() call, need to manually
@@ -121,7 +111,6 @@ class CV_Main {
   cv::Scalar CV_GREEN = cv::Scalar ( 0, 255, 0 );
   cv::Scalar CV_BLUE = cv::Scalar ( 0, 0, 255 );
 
-  bool m_camara_stopping_thread = false;
   bool m_camera_thread_stopped = false;
 };
 
