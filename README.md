@@ -19,7 +19,7 @@ This is a showcase how to get OpenCV up and running with just the Android NDK
 - Change the OpenCV Android SDK library path in [Android.mk file](/OpenCV-NDK/app/src/main/cpp/Android.mk#L8) to your `my/path/to/OpenCV-android-sdk/sdk/native/jni/OpenCV.mk`
 - Move all files in the [Asset folder](/OpenCV-NDK/app/src/main/assets) to your device
 	- This is annoying af, but no good solution I could find easily fixed it since OpenCV requires a file string which the NDK won't give permission to.
-	- Currently the folder the asset files is listed in the [CV_Main.h](/OpenCV-NDK/app/src/main/cppCV_Main.h) private values so make sure it matches
+	- Currently the folder the asset files is listed in the [CV_Main.h](/OpenCV-NDK/app/src/main/cpp/CV_Main.h) private values so make sure it matches
 
 ## How to run 32 bit (or x86)
 
