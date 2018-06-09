@@ -38,6 +38,10 @@ Native_Camera::Native_Camera(camera_type type) {
   ASSERT(cameraStatus == ACAMERA_OK, "Failed to open camera device (id: %s)",
          m_selected_camera_id);
 
+//  ACameraMetadata_const_entry entry;
+//  ACameraMetadata_getConstEntry(
+//      cameraMetadata, ACAMERA_INFO_SUPPORTED_HARDWARE_LEVEL, &entry);
+
   m_camera_ready = true;
 }
 

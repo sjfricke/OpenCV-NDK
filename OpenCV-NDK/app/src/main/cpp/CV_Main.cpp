@@ -3,20 +3,7 @@
 CV_Main::CV_Main()
     : m_camera_ready(false), m_image(nullptr), m_image_reader(nullptr), m_native_camera(nullptr), scan_mode(false) {
 
-//  AAssetDir* assetDir = AAssetManager_openDir(m_aasset_manager, "");
-//  const char* filename = (const char*)NULL;
-//  while ((filename = AAssetDir_getNextFileName(assetDir)) != NULL) {
-//    AAsset* asset = AAssetManager_open(m_aasset_manager, filename, AASSET_MODE_STREAMING);
-//    char buf[BUFSIZ];
-//    int nb_read = 0;
-//    FILE* out = fopen(filename, "w");
-//    while ((nb_read = AAsset_read(asset, buf, BUFSIZ)) > 0)
-//      fwrite(buf, nb_read, 1, out);
-//    fclose(out);
-//    AAsset_close(asset);
-//  }
-//  AAssetDir_close(assetDir);
-
+  // This issue is because OpenCV takes a file name but NDK AAssetManager only gives file descriptor
   if( !face_cascade.load( face_cascade_name ) ){ LOGE("--(!)Error loading face cascade\n"); };
   if( !eyes_cascade.load( eyes_cascade_name ) ){ LOGE("--(!)Error loading eyes cascade\n"); };
 };
@@ -29,18 +16,16 @@ CV_Main::~CV_Main() {
   calling_activity_obj = nullptr;
 
   // ACameraCaptureSession_stopRepeating(m_capture_session);
-
   if (m_native_camera != nullptr) {
     delete m_native_camera;
     m_native_camera = nullptr;
   }
 
-   // make sure we don't leak native windows
+  // make sure we don't leak native windows
   if (m_native_window != nullptr) {
     ANativeWindow_release(m_native_window);
     m_native_window = nullptr;
   }
-
 
   if (m_image_reader != nullptr) {
     delete (m_image_reader);
@@ -167,7 +152,6 @@ void CV_Main::FaceDetect(cv::Mat &frame) {
     scan_mode = false;
   }
   start_t = clock();
-
 }
 
 // When scan button is hit

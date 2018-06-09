@@ -5,7 +5,7 @@ include $(CLEAR_VARS)
 
 OPENCV_INSTALL_MODULES:=on
 
-include C:\Users\SpencerFricke\Documents\OpenCV-android-sdk\sdk\native\jni\OpenCV.mk
+include /home/fricke/OpenCV-android-sdk/sdk/native/jni/OpenCV.mk
 
 LOCAL_MODULE    := libopencv_ndk
 LOCAL_CFLAGS    := -Werror -Wno-write-strings -std=c++11
